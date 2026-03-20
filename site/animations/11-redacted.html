@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 900;
+  }
+
+  .container {
+    width: 100vmin;
+    height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent, transparent 1px,
+      rgba(0, 0, 0, 0.12) 1px, rgba(0, 0, 0, 0.12) 2px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none; z-index: 9;
+  }
+
+  .quote-line {
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+    position: relative;
+    padding: 0 5vmin;
+  }
+
+  .redact-bar {
+    position: absolute;
+    top: 0;
+    left: 5vmin;
+    right: 5vmin;
+    bottom: 0;
+    background: #F918D0;
+    transform-origin: left center;
+    transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .redact-bar.lifted {
+    transform: scaleX(0);
+  }
+
+  .glitch-overlay {
+    position: absolute; inset: 0;
+    background: #F918D0;
+    opacity: 0; pointer-events: none; z-index: 8;
+  }
+
+  .label {
+    position: absolute; bottom: 30px;
+    font-size: 10px; color: #F918D030;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="vignette"></div>
+  <div class="glitch-overlay" id="glitch"></div>
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+
+<script>
+// --- REDACTED + SCRAMBLE ANIMATION ---
+// Bars lift to reveal scrambled ASCII underneath,
+// which then resolves into the real text.
+
+const QUOTES = ["Women are too emotional to be in charge"];
+
+const CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`01\u2588\u2593\u2592\u2591\u2584\u2580\u25A0\u25A1\u25AA\u25AB';
+
+const LINES_CONFIG = {
+  5:  { wpl: 3, size: 8 },
+  10: { wpl: 3, size: 6 },
+  15: { wpl: 3, size: 5 },
+  25: { wpl: 3, size: 4 },
+};
+
+function getConfig(wc) {
+  if (wc <= 5) return LINES_CONFIG[5];
+  if (wc <= 10) return LINES_CONFIG[10];
+  if (wc <= 18) return LINES_CONFIG[15];
+  return LINES_CONFIG[25];
+}
+
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+function randomChar() {
+  return CHARS[Math.floor(Math.random() * CHARS.length)];
+}
+
+function scrambleText(original, progress) {
+  let result = '';
+  for (let i = 0; i < original.length; i++) {
+    if (original[i] === ' ') {
+      result += ' ';
+    } else if (i / original.length < progress) {
+      result += original[i];
+    } else {
+      result += randomChar();
+    }
+  }
+  return result;
+}
+
+const quoteEl = document.getElementById('quote');
+const glitchEl = document.getElementById('glitch');
+let quoteIndex = 0;
+
+function glitchFlash() {
+  glitchEl.style.opacity = '0.06';
+  setTimeout(() => { glitchEl.style.opacity = '0'; }, 50);
+}
+
+function runRedacted() {
+  const quote = QUOTES[quoteIndex % QUOTES.length];
+  quoteIndex++;
+  const words = quote.split(/\s+/);
+  const config = getConfig(words.length);
+  const lines = breakIntoLines(quote, config.wpl);
+
+  quoteEl.innerHTML = '';
+  quoteEl.style.opacity = '1';
+
+  const bars = [];
+  const lineData = [];
+
+  lines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'quote-line';
+    div.style.fontSize = config.size + 'vmin';
+    div.style.lineHeight = '1.4';
+    div.style.position = 'relative';
+    div.textContent = scrambleText(line, 0); // Start with scrambled text under the bar
+
+    const bar = document.createElement('div');
+    bar.className = 'redact-bar';
+    div.appendChild(bar);
+    bars.push(bar);
+    lineData.push({ el: div, text: line, revealed: false, resolveStart: 0 });
+
+    quoteEl.appendChild(div);
+  });
+
+  // Scramble the text under the bars continuously
+  let scrambleFrame = 0;
+  const scrambleInterval = setInterval(() => {
+    scrambleFrame++;
+    lineData.forEach(ld => {
+      if (!ld.revealed) {
+        // Still under bar — keep scrambling (not visible but ready)
+        ld.el.textContent = scrambleText(ld.text, 0);
+        // Re-append the bar since textContent wipes children
+        const bar = ld.el.querySelector('.redact-bar') || bars[lineData.indexOf(ld)];
+        if (!ld.el.contains(bar)) ld.el.appendChild(bar);
+      } else {
+        // Bar lifted — scramble resolving toward real text
+        const elapsed = scrambleFrame - ld.resolveStart;
+        const progress = Math.min(1, elapsed / 30); // ~0.5 seconds to resolve
+        ld.el.textContent = scrambleText(ld.text, progress);
+
+        if (progress >= 1) {
+          ld.el.textContent = ld.text;
+        }
+      }
+    });
+  }, 1000 / 60);
+
+  // Lift bars one by one
+  let barIdx = 0;
+  function liftNext() {
+    if (barIdx >= bars.length) {
+      // All revealed — wait for scrambles to finish resolving
+      setTimeout(() => {
+        // Make sure all text is fully resolved
+        lineData.forEach(ld => ld.el.textContent = ld.text);
+
+        // Hold
+        setTimeout(() => {
+          clearInterval(scrambleInterval);
+
+          // Exit: scramble back out then fade
+          let exitFrame = 0;
+          const exitInterval = setInterval(() => {
+            exitFrame++;
+            const exitProgress = exitFrame / 40;
+            lineData.forEach(ld => {
+              ld.el.textContent = scrambleText(ld.text, 1 - exitProgress);
+            });
+            quoteEl.style.opacity = String(Math.max(0, 1 - exitProgress));
+
+            if (exitProgress >= 1) {
+              clearInterval(exitInterval);
+              quoteEl.style.opacity = '1';
+              setTimeout(runRedacted, 600);
+            }
+          }, 1000 / 60);
+        }, 2500);
+      }, 600);
+      return;
+    }
+
+    glitchFlash();
+    bars[barIdx].classList.add('lifted');
+    lineData[barIdx].revealed = true;
+    lineData[barIdx].resolveStart = scrambleFrame;
+    barIdx++;
+    setTimeout(liftNext, 400 + Math.random() * 300);
+  }
+
+  // Initial pause then start lifting
+  setTimeout(liftNext, 1000);
+}
+
+setTimeout(runRedacted, 800);
+</script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 900;
+  }
+  .container {
+    width: 100vmin; height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent, transparent 1px,
+      rgba(0, 0, 0, 0.10) 1px, rgba(0, 0, 0, 0.10) 2px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none; z-index: 9;
+  }
+  #quote {
+    z-index: 5;
+    position: relative;
+  }
+  .quote-line {
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    padding: 0 5vmin;
+  }
+  /* RGB ghost layers */
+  #ghost-r, #ghost-b {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  #ghost-r .quote-line {
+    color: rgba(255, 0, 0, 0);
+  }
+  #ghost-b .quote-line {
+    color: rgba(0, 100, 255, 0);
+  }
+  /* Pulse ring */
+  .pulse-ring {
+    position: absolute;
+    border: 2px solid #F918D0;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+  }
+  .label {
+    position: absolute; bottom: 30px;
+    font-size: 10px; color: #F918D030;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+<div class="container" id="container">
+  <div class="vignette"></div>
+  <div id="ghost-r"></div>
+  <div id="ghost-b"></div>
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+
+<script>
+// --- HEARTBEAT / PULSE ---
+// Text pulses like a heartbeat. Each beat:
+//   - Text scales up slightly
+//   - RGB channels split momentarily
+//   - A shockwave ring expands outward
+//   - Background flashes deep red
+// The rhythm is synced to a real heartbeat (~72 BPM).
+
+const QUOTES = ["She was dressed like she wanted attention"];
+
+function getConfig(wc) {
+  if (wc <= 5) return { wpl: 3, size: 8 };
+  if (wc <= 10) return { wpl: 3, size: 6 };
+  if (wc <= 18) return { wpl: 3, size: 5 };
+  return { wpl: 3, size: 4 };
+}
+
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const ghostR = document.getElementById('ghost-r');
+const ghostB = document.getElementById('ghost-b');
+const container = document.getElementById('container');
+let quoteIndex = 0;
+
+function buildQuote() {
+  const quote = QUOTES[quoteIndex % QUOTES.length];
+  const words = quote.split(/\s+/);
+  const config = getConfig(words.length);
+  const lines = breakIntoLines(quote, config.wpl);
+
+  [quoteEl, ghostR, ghostB].forEach(el => {
+    // Keep non-quote children (like label)
+    const isQuote = el === quoteEl;
+    el.innerHTML = '';
+    lines.forEach(line => {
+      const div = document.createElement('div');
+      div.className = 'quote-line';
+      div.style.fontSize = config.size + 'vmin';
+      div.style.lineHeight = '1.3';
+      div.textContent = line;
+      el.appendChild(div);
+    });
+  });
+}
+
+// Heartbeat timing: 72 BPM = 833ms per beat
+// Double beat pattern: thump-THUMP ... thump-THUMP
+const BPM = 72;
+const beatInterval = 60000 / BPM;
+
+let beatCount = 0;
+let phase = 'show'; // show, transition
+let phaseStart = 0;
+
+function pulse(intensity) {
+  // Scale
+  quoteEl.style.transform = `scale(${1 + intensity * 0.08})`;
+  setTimeout(() => {
+    quoteEl.style.transition = 'transform 0.3s ease-out';
+    quoteEl.style.transform = 'scale(1)';
+    setTimeout(() => { quoteEl.style.transition = ''; }, 300);
+  }, 50);
+
+  // RGB split
+  const split = intensity * 6;
+  ghostR.style.transform = `translateX(${-split}px)`;
+  ghostR.querySelectorAll('.quote-line').forEach(el => {
+    el.style.color = `rgba(255, 0, 0, ${intensity * 0.5})`;
+  });
+  ghostB.style.transform = `translateX(${split}px)`;
+  ghostB.querySelectorAll('.quote-line').forEach(el => {
+    el.style.color = `rgba(0, 100, 255, ${intensity * 0.5})`;
+  });
+  setTimeout(() => {
+    ghostR.style.transition = 'transform 0.3s ease-out';
+    ghostB.style.transition = 'transform 0.3s ease-out';
+    ghostR.style.transform = '';
+    ghostB.style.transform = '';
+    ghostR.querySelectorAll('.quote-line').forEach(el => {
+      el.style.transition = 'color 0.3s';
+      el.style.color = 'rgba(255,0,0,0)';
+    });
+    ghostB.querySelectorAll('.quote-line').forEach(el => {
+      el.style.transition = 'color 0.3s';
+      el.style.color = 'rgba(0,100,255,0)';
+    });
+    setTimeout(() => {
+      ghostR.style.transition = '';
+      ghostB.style.transition = '';
+      ghostR.querySelectorAll('.quote-line').forEach(el => el.style.transition = '');
+      ghostB.querySelectorAll('.quote-line').forEach(el => el.style.transition = '');
+    }, 300);
+  }, 80);
+
+  // Background flash
+  document.body.style.background = `rgb(${Math.floor(10 + intensity * 40)}, ${Math.floor(10 - intensity * 5)}, ${Math.floor(10 - intensity * 5)})`;
+  setTimeout(() => {
+    document.body.style.transition = 'background 0.4s ease-out';
+    document.body.style.background = '#0a0a0a';
+    setTimeout(() => { document.body.style.transition = ''; }, 400);
+  }, 60);
+
+  // Glow on text
+  quoteEl.querySelectorAll('.quote-line').forEach(el => {
+    el.style.textShadow = `0 0 ${20 + intensity * 40}px #F918D0, 0 0 ${40 + intensity * 60}px #F918D060`;
+    setTimeout(() => {
+      el.style.transition = 'text-shadow 0.4s ease-out';
+      el.style.textShadow = '0 0 8px #F918D040';
+      setTimeout(() => { el.style.transition = ''; }, 400);
+    }, 80);
+  });
+
+  // Pulse ring
+  const ring = document.createElement('div');
+  ring.className = 'pulse-ring';
+  ring.style.width = '10px';
+  ring.style.height = '10px';
+  ring.style.left = '50%';
+  ring.style.top = '50%';
+  ring.style.transform = 'translate(-50%, -50%)';
+  ring.style.opacity = String(intensity * 0.6);
+  container.appendChild(ring);
+
+  requestAnimationFrame(() => {
+    ring.style.transition = 'all 0.8s ease-out';
+    ring.style.width = '80vmin';
+    ring.style.height = '80vmin';
+    ring.style.opacity = '0';
+    ring.style.borderWidth = '1px';
+  });
+  setTimeout(() => ring.remove(), 1000);
+}
+
+function heartbeat() {
+  beatCount++;
+
+  // Double beat: small then big
+  const isStrong = beatCount % 2 === 0;
+  pulse(isStrong ? 1.0 : 0.4);
+
+  // Cycle quotes every 8 beats
+  if (beatCount % 16 === 0) {
+    quoteEl.style.transition = 'opacity 0.5s';
+    quoteEl.style.opacity = '0';
+    ghostR.style.opacity = '0';
+    ghostB.style.opacity = '0';
+    setTimeout(() => {
+      quoteIndex++;
+      buildQuote();
+      quoteEl.style.opacity = '1';
+      ghostR.style.opacity = '1';
+      ghostB.style.opacity = '1';
+      setTimeout(() => { quoteEl.style.transition = ''; }, 500);
+    }, 600);
+  }
+}
+
+document.fonts.ready.then(() => {
+  buildQuote();
+
+  // Double-beat rhythm: thump (short pause) THUMP (long pause)
+  function doBeat() {
+    // First beat (soft)
+    heartbeat();
+    // Second beat (strong) after 200ms
+    setTimeout(() => {
+      heartbeat();
+    }, 200);
+  }
+
+  setInterval(doBeat, beatInterval * 2);
+  doBeat(); // immediate first beat
+});
+</script>
+</body>
+</html>

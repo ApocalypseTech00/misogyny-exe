@@ -1,0 +1,13 @@
+{
+  "name": "MISOGYNY.EXE — Open Edition",
+  "description": "The language of sexism, extracted from public record and redesigned as typographic art. This open edition is your entry point — collect to fund organisations fighting domestic violence.\n\n0.002 ETH. 14 days. Infinite supply. Every mint matters.\n\nText sourced from public record, transformed for critical artistic commentary. Proceeds donated to domestic violence charities.",
+  "image": "",
+  "properties": {
+    "type": "open-edition",
+    "edition": "unlimited",
+    "duration": "14 days",
+    "price": "0.002 ETH",
+    "chain": "Base",
+    "charity": "Refuge via off-ramp"
+  }
+}
