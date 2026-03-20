@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 900;
+  }
+  .container {
+    width: 100vmin; height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .container::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent, transparent 1px,
+      rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px
+    );
+    pointer-events: none; z-index: 10;
+  }
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none; z-index: 9;
+  }
+  .quote-line {
+    text-align: center; text-transform: uppercase;
+    color: #F918D0; letter-spacing: 0.05em;
+    min-height: 1.2em; padding: 0 5vmin;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+  }
+  .label {
+    position: absolute; bottom: 30px;
+    font-size: 10px; color: #F918D030;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
+</style></head>
+<body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+<script>
+
+const LINES_CONFIG = {
+  5:  { wpl: 3, size: 8 },
+  10: { wpl: 3, size: 6 },
+  15: { wpl: 3, size: 5 },
+  25: { wpl: 3, size: 4 },
+};
+function getConfig(wc) {
+  if (wc <= 5) return LINES_CONFIG[5];
+  if (wc <= 10) return LINES_CONFIG[10];
+  if (wc <= 18) return LINES_CONFIG[15];
+  return LINES_CONFIG[25];
+}
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+const QUOTE = "Stop being so dramatic it is just a joke";
+const CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`01\u2588\u2593\u2592\u2591\u2584\u2580\u25A0\u25A1\u25AA\u25AB';
+const quoteEl = document.getElementById('quote');
+const words = QUOTE.split(/\s+/);
+const config = getConfig(words.length);
+const lines = breakIntoLines(QUOTE, config.wpl);
+const lineEls = lines.map(line => {
+  const div = document.createElement('div');
+  div.className = 'quote-line';
+  div.style.fontSize = config.size + 'vmin';
+  div.style.lineHeight = '1.3';
+  quoteEl.appendChild(div);
+  return { el: div, text: line, chars: line.length };
+});
+function randomChar() { return CHARS[Math.floor(Math.random() * CHARS.length)]; }
+function scrambleText(original, progress) {
+  let r = '';
+  for (let i = 0; i < original.length; i++) {
+    if (original[i] === ' ') r += ' ';
+    else if (i / original.length < progress) r += original[i];
+    else r += randomChar();
+  }
+  return r;
+}
+let phase = 'wait', frame = 0, resolveProgress = 0;
+function animate() {
+  frame++;
+  if (phase === 'wait') {
+    if (frame > 60) { phase = 'scramble'; frame = 0; }
+  } else if (phase === 'scramble') {
+    const total = lineEls.reduce((s, l) => s + l.chars, 0);
+    resolveProgress = Math.min(1, frame / (total * 2));
+    let resolved = Math.floor(resolveProgress * total), soFar = 0;
+    for (const line of lineEls) {
+      const lr = Math.max(0, Math.min(1, (resolved - soFar) / line.chars));
+      soFar += line.chars;
+      line.el.textContent = scrambleText(line.text, lr);
+    }
+    if (resolveProgress >= 1) { lineEls.forEach(l => l.el.textContent = l.text); phase = 'hold'; frame = 0; }
+  } else if (phase === 'hold') {
+    if (frame > 180) { phase = 'fadeout'; frame = 0; }
+  } else if (phase === 'fadeout') {
+    const p = frame / 60;
+    quoteEl.style.opacity = String(1 - p);
+    lineEls.forEach(l => l.el.textContent = scrambleText(l.text, 1 - p));
+    if (p >= 1) { phase = 'wait'; frame = 0; quoteEl.style.opacity = '1'; lineEls.forEach(l => l.el.textContent = ''); }
+  }
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+</script></body></html>

@@ -1,0 +1,13 @@
+{
+  "name": "MISOGYNY.EXE — #[NUMBER]",
+  "description": "[ARTWORK-SPECIFIC DESCRIPTION]\n\nText sourced from public record, transformed for critical artistic commentary. Proceeds donated to domestic violence charities.",
+  "image": "",
+  "properties": {
+    "type": "1/1",
+    "edition": "unique",
+    "reserve": "0.3 ETH",
+    "auction_duration": "24h after first bid",
+    "chain": "Base",
+    "charity": "Refuge via off-ramp"
+  }
+}
