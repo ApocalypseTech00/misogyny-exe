@@ -1,23 +1,53 @@
-node_modules/
+# Environment & secrets
 .env
-cache/
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Build artifacts
 artifacts/
+cache/
 typechain-types/
 coverage/
 coverage.json
-.DS_Store
-assets/qr-codes/
-data/index.json
-data/mint-queue.json
 
-# Private docs (not for public repo)
-NEXT_SESSION_PROMPT.md
-SECURITY-AUDIT.md
-TODO.md
-OPSEC-GUIDE.md
-PRE-LAUNCH-AUDIT.md
-SECURITY.md
+# Runtime data
+data/
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# Private project docs (not for public repo)
 CLAUDE.md
+NEXT_SESSION_PROMPT.md
+SESSION-LOG.md
+SECURITY-AUDIT.md
+SECURITY.md
+PRE-LAUNCH-AUDIT.md
+OPSEC-GUIDE.md
+TODO.md
 HACKATHON-CHECKLIST.md
+V2_MARKETPLACE_BRIEF.md
+V3_BOT_BRIEF.md
 misogyny-agent.service
-.env.local
+
+# QR codes with specific URLs
+assets/qr-codes/
+
+# Archives
+archive/
+
+# Analytics (internal)
+analytics/

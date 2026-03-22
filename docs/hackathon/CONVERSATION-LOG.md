@@ -413,7 +413,7 @@ This is a retrospective conversation log covering the full build journey from pr
 5. Auto-deploy pipeline (Surge on new mints)
 6. Polish and bug fixes
 
-### Key Metrics
+### Key Metrics (as of Session 19)
 - 56 contract tests passing
 - 22 sanitizer test cases
 - 9 NFTs minted total (3 Sepolia test + 6 Base mainnet with proper artwork)
@@ -422,3 +422,34 @@ This is a retrospective conversation log covering the full build journey from pr
 - 34 security findings audited
 - 1 Raspberry Pi running autonomously
 - 82+ files changed in Session 19 alone
+
+---
+
+## Session 20 — Bluesky Fix, Animation Videos, Street Art, Final Audit (2026-03-22)
+
+### Decisions
+- **Root cause found for missing Bluesky posts:** postToSocials was never reached during minting — tokens were minted through paths that bypassed social posting. The function itself worked perfectly.
+- **Animation videos on Bluesky:** Rather than static images, captured all 9 animations as 8-second MP4 videos using Puppeteer + ffmpeg, uploaded via Bluesky's video API. Required discovering the correct AT Protocol service auth flow (PDS DID audience, not video service DID).
+- **Street art photos:** 8 Brick Lane installation photos added to about page, all EXIF metadata stripped for privacy.
+- **Security audit on deadline day:** Full private data leak scan before submission. Found tracked log/data files in public repo — removed from git index, .gitignore updated.
+
+### Pivots
+- Bluesky video upload initially failed with `unconfirmed_email` — had to resend confirmation email via AT Protocol API and get user to verify before videos could upload.
+- Service auth for video upload used wrong audience (`did:web:video.bsky.app` instead of PDS DID) — required debugging the AT Protocol auth chain.
+
+### Breakthroughs
+- Animation-to-video pipeline: fully automated HTML → MP4 capture using headless Puppeteer (800x800, 30fps, 8 seconds per animation). 9 videos captured and uploaded in one run.
+- All 9 Bluesky posts now have inline animated video — significantly more impactful than static images for the hackathon showcase.
+
+### Agent vs Human
+- **Agent (Claude Opus 4.6):** Root cause investigation of Bluesky posting gap, video capture pipeline (Puppeteer + ffmpeg + Bluesky video API), EXIF stripping, security audit, .gitignore cleanup, all deployments
+- **Human:** Provided street art photos, wrote about page copy ("street art not meta"), creative direction on lowercase "meta" for subtle double meaning, verified Bluesky email
+
+### Final Status (Submission Day)
+- 56 contract tests + 22 guard tests passing
+- 9 NFTs with animation videos on Bluesky (misogyny-exe.bsky.social)
+- 8 street art photos on about page (EXIF stripped)
+- Social posting wired into all minting paths (autonomous-agent.ts, auto-mint.ts, rare-mint.ts)
+- 4 domains deployed
+- Public repo clean (no secrets, no personal data, proper .gitignore)
+- Pi running autonomously on 12h cron
