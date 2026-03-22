@@ -10,15 +10,29 @@
   <style>
     @font-face {
       font-family: 'CMU Serif';
-      src: url('fonts/cmunci.ttf') format('truetype');
-      font-weight: 900;
-      font-style: italic;
+      src: url('fonts/cmunrm.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
       font-display: swap;
     }
     @font-face {
       font-family: 'CMU Serif';
       src: url('fonts/cmunti.ttf') format('truetype');
       font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunbx.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunci.ttf') format('truetype');
+      font-weight: 900;
       font-style: italic;
       font-display: swap;
     }
@@ -36,6 +50,7 @@
       --text-muted: #6a3a5a;
       --accent: #1a1a1a;
       --accent-dark: #000;
+      --accent-text: #F918D0;
       --danger: #8b0000;
       --success: #1a1a1a;
     }
@@ -61,32 +76,51 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(249, 24, 208, 0.95);
+      padding: 12px 24px;
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(8px);
     }
 
     .header-title {
       font-family: 'CMU Serif', serif;
       font-weight: 900;
       font-style: italic;
-      font-size: clamp(1rem, 3vw, 1.5rem);
-      letter-spacing: 0.05em;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
     }
-
-    .header-title span { color: var(--accent); }
+    .header-title a { text-decoration: none; color: var(--text); }
+    .header-title a:hover { opacity: 0.7; }
 
     .header-nav {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.5rem;
     }
 
     .header-nav a {
-      font-size: 0.75rem;
-      color: var(--text-dim);
+      font-family: 'CMU Serif', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text);
       letter-spacing: 0.1em;
+      text-decoration: none;
+    }
+    .header-nav a:hover { font-weight: 900; }
+
+    .header-nav .nav-cta {
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 8px 16px;
+      font-weight: 900;
+    }
+    .header-nav .nav-cta:hover { opacity: 0.85; }
+
+    @media (max-width: 600px) {
+      .header { padding: 10px 16px; }
+      .header-title { font-size: 0.8rem; }
+      .header-nav { gap: 0.8rem; }
+      .header-nav a { font-size: 0.65rem; }
+      .header-nav .nav-cta { padding: 6px 10px; }
     }
 
     .btn {
@@ -213,12 +247,12 @@
     .hero-desc {
       max-width: 600px;
       margin: 0 auto 1rem;
-      font-size: 1.05rem;
-      line-height: 1.8;
-      color: var(--text-dim);
+      font-size: 1.15rem;
+      line-height: 1.9;
+      color: var(--text);
       text-transform: none;
-      font-weight: 900;
-      font-style: italic;
+      font-weight: 400;
+      font-style: normal;
     }
 
     .hero-sub {
@@ -748,7 +782,7 @@
     /* --- RESPONSIVE --- */
     @media (max-width: 600px) {
       .hero-banner { padding: 3rem 1.5rem 2rem; }
-      .hero-desc { font-size: 0.8rem; }
+      .hero-desc { font-size: 1.05rem; }
       .tabs-row { flex-wrap: wrap; gap: 0.5rem; }
       .header { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
       .header-nav { width: 100%; justify-content: flex-end; }
@@ -767,9 +801,11 @@
 
   <!-- HEADER -->
   <header class="header">
-    <div class="header-title"><span>MISOGYNY.EXE</span></div>
+    <div class="header-title"><a href="index.html">Misogyny.exe</a></div>
     <div class="header-nav">
-      <a href="index.html">Site</a>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="https://www.refuge.org.uk/donate/" target="_blank" rel="noopener" class="nav-cta">Donate to Refuge</a>
       <div id="wallet-section">
         <button class="btn" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
       </div>
@@ -791,10 +827,10 @@
     <p class="hero-sub">
       You can't stop the bot. You can own what it makes.
     </p>
-    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-transform: none;">
+    <p style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-dim); text-transform: none; font-style: normal;">
       The bot auto-posts to <a href="https://bsky.app/profile/misogyny-exe.bsky.social" target="_blank" rel="noopener">Bluesky @misogyny-exe</a>
     </p>
-    <p style="margin-top: 0.8rem; font-size: 0.7rem; color: var(--text-muted); text-transform: none;">
+    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: var(--text-dim); text-transform: none; font-style: normal;">
       *Charity proceeds are transferred to <a href="https://refuge.org.uk" target="_blank" rel="noopener">Refuge</a> on a rolling basis. Proof of transfers will be posted publicly. This is v1 — full automation of the off-ramp pipeline is in progress.
     </p>
   </div>
@@ -852,22 +888,29 @@
 
     <!-- ROYALTY INFO -->
     <div class="royalty-info">
-      <div class="royalty-title">Royalty Split — Every Sale</div>
+      <div class="royalty-title">How Proceeds Are Split</div>
       <div class="royalty-row">
-        <span>Seller</span>
+        <span>Seller receives</span>
         <span class="royalty-pct">85%</span>
       </div>
-      <div class="royalty-row">
+      <div class="royalty-row" style="border-bottom: none; padding-bottom: 0;">
+        <span>15% royalty split:</span>
+        <span></span>
+      </div>
+      <div class="royalty-row" style="padding-left: 1rem;">
         <span>Charity (Refuge)</span>
         <span class="royalty-pct">5%</span>
       </div>
-      <div class="royalty-row">
-        <span>Bot / LLC</span>
-        <span class="royalty-pct">5%</span>
-      </div>
-      <div class="royalty-row">
+      <div class="royalty-row" style="padding-left: 1rem;">
         <span>Artist</span>
         <span class="royalty-pct">5%</span>
+      </div>
+      <div class="royalty-row" style="padding-left: 1rem;">
+        <span>Project</span>
+        <span class="royalty-pct">5%</span>
+      </div>
+      <div class="royalty-row" style="font-size: 0.65rem; color: var(--text-muted); border: none;">
+        <span>*Initial mint proceeds split 50% charity / 30% artist / 20% project via on-chain PaymentSplitter</span>
       </div>
     </div>
   </div>

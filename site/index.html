@@ -93,10 +93,63 @@
     a { color: var(--text); }
     a:hover { opacity: 0.7; }
 
+    /* NAV BAR */
+    .site-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .site-nav-brand {
+      font-family: 'CMU Serif', Georgia, serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .site-nav-brand:hover { opacity: 0.7; text-decoration: none; }
+    .site-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    .site-nav-links a {
+      font-family: 'CMU Serif', Georgia, serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .site-nav-links a:hover { font-weight: 900; }
+    .site-nav-links .nav-cta {
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 8px 16px;
+      font-weight: 900;
+    }
+    .site-nav-links .nav-cta:hover { opacity: 0.85; }
+    @media (max-width: 600px) {
+      .site-nav { padding: 10px 16px; }
+      .site-nav-brand { font-size: 0.7rem; }
+      .site-nav-links { gap: 0.8rem; }
+      .site-nav-links a { font-size: 0.6rem; }
+      .site-nav-links .nav-cta { padding: 6px 12px; }
+    }
+
     /* THEME TOGGLE */
     .theme-toggle {
       position: fixed;
-      top: 20px; right: 20px;
+      top: 60px; right: 20px;
       width: 40px; height: 40px;
       border-radius: 50%;
       border: 2px solid var(--text);
@@ -1932,6 +1985,15 @@
 </head>
 <body>
 
+  <nav class="site-nav" id="site-nav">
+    <a href="index.html" class="site-nav-brand">Misogyny.exe</a>
+    <ul class="site-nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="marketplace.html">Marketplace</a></li>
+      <li><a href="https://www.refuge.org.uk/donate/" target="_blank" rel="noopener" class="nav-cta">Donate to Refuge</a></li>
+    </ul>
+  </nav>
 
   <main>
     <div class="slide-wrapper" id="slide-wrapper">
@@ -2215,6 +2277,19 @@
           <a href="https://www.refuge.org.uk" target="_blank" rel="noopener">refuge.org.uk</a> &middot; Helpline: 0808 2000 247 (24/7, free)
         </p>
         <p style="font-size:0.6rem;color:var(--text-muted);margin-top:16px;letter-spacing:0.05em;">Refuge is not affiliated with this project. We just think they do vital work.</p>
+      </div>
+    </section>
+
+    <!-- MARKETPLACE CTA (end) -->
+    <section class="panel hero-text-panel" id="marketplace-panel-end">
+      <div class="marketplace-graphic ascending" id="marketplace-graphic-end">
+        <canvas id="marketplace-dither-canvas-end"></canvas>
+        <canvas class="angel-afterimage" id="marketplace-after1-end"></canvas>
+        <canvas class="angel-afterimage" id="marketplace-after2-end"></canvas>
+      </div>
+      <div class="panel-inner">
+        <p class="hero-sub" style="opacity:1;">Own a piece. Fund the fight.<br>Every sale supports Refuge.</p>
+        <a href="marketplace.html" class="hero-cta" style="opacity:1;animation-play-state:running;">Browse the Marketplace &rarr;</a>
       </div>
     </section>
 

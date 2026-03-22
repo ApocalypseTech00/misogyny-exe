@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MISOGYNY.EXE — About</title>
+  <meta name="description" content="An autonomous anti-misogyny art bot. Sourcing hate, turning it into art, funding charity.">
+  <style>
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunrm.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunti.ttf') format('truetype');
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunbx.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunci.ttf') format('truetype');
+      font-weight: 700;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunbl.ttf') format('truetype');
+      font-weight: 900;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #F918D0;
+      --bg-alt: #e617bf;
+      --text: #1a1a1a;
+      --text-dim: #3a1a30;
+      --text-muted: #6a3a5a;
+      --border: #cc15aa;
+      --accent: #1a1a1a;
+      --accent-text: #F918D0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'CMU Serif', Georgia, serif;
+      font-style: normal;
+      font-size: 17px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--text); }
+    a:hover { opacity: 0.7; }
+
+    /* NAV */
+    .site-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .site-nav-brand {
+      font-weight: 900;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .site-nav-brand:hover { opacity: 0.7; text-decoration: none; }
+    .site-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      list-style: none;
+    }
+    .site-nav-links a {
+      font-size: 0.85rem;
+      font-style: italic;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .site-nav-links a:hover { font-weight: 900; }
+    .site-nav-links .nav-cta {
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 8px 16px;
+      font-weight: 900;
+    }
+    .site-nav-links .nav-cta:hover { opacity: 0.85; }
+
+    /* CONTENT */
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 100px 24px 80px;
+    }
+
+    .page-title {
+      font-weight: 900;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 3rem;
+      line-height: 1.2;
+    }
+
+    .section {
+      margin-bottom: 4rem;
+    }
+
+    .section-title {
+      font-weight: 900;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .body-text {
+      font-size: 1.15rem;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 2;
+      text-transform: none;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .body-text strong {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .pull-quote {
+      font-weight: 900;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 3rem 0;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* PHOTO PLACEHOLDERS */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 2.5rem 0;
+    }
+
+    .photo-placeholder {
+      aspect-ratio: 4/3;
+      background: rgba(0, 0, 0, 0.08);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .photo-full {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: rgba(0, 0, 0, 0.08);
+      border: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 2.5rem 0;
+    }
+
+    /* ARCHITECTURE */
+    .arch-diagram {
+      background: #0a0a0a;
+      color: #F918D0;
+      padding: 2rem;
+      margin: 2rem 0;
+      font-family: 'Courier New', monospace;
+      font-style: normal;
+      font-size: 0.75rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      text-transform: none;
+    }
+
+    .tech-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .tech-item {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .tech-item-title {
+      font-weight: 900;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+    }
+
+    .tech-item-desc {
+      font-size: 0.85rem;
+      font-style: normal;
+      color: var(--text-dim);
+      text-transform: none;
+    }
+
+    .contract-addr {
+      font-family: 'Courier New', monospace;
+      font-style: normal;
+      font-size: 0.7rem;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0;
+      word-break: break-all;
+      text-transform: none;
+      border: 1px solid var(--border);
+    }
+
+    .contract-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 3rem 24px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .footer a { color: var(--text-dim); }
+
+    @media (max-width: 600px) {
+      .page { padding: 80px 16px 60px; }
+      .photo-grid { grid-template-columns: 1fr; }
+      .tech-stack { grid-template-columns: 1fr; }
+      .site-nav { padding: 10px 16px; }
+      .site-nav-brand { font-size: 0.7rem; }
+      .site-nav-links { gap: 0.8rem; }
+      .site-nav-links a { font-size: 0.6rem; }
+      .site-nav-links .nav-cta { padding: 6px 12px; }
+      .arch-diagram { font-size: 0.6rem; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <a href="index.html" class="site-nav-brand">Misogyny.exe</a>
+    <ul class="site-nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="marketplace.html">Marketplace</a></li>
+      <li><a href="https://www.refuge.org.uk/donate/" target="_blank" rel="noopener" class="nav-cta">Donate to Refuge</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+
+    <h1 class="page-title">About</h1>
+
+    <!-- ========== THE MANIFESTO ========== -->
+    <div class="section">
+      <p class="body-text">
+        misogyny.exe is a project attempting to source misogynistic quotes from social media, sell these as beautiful NFT animations on the blockchain and donate to charity.
+      </p>
+      <p class="body-text">
+        Once purchased the NFT message turns into a positive one. How about countering evil with art and satire?
+      </p>
+    </div>
+
+    <div class="photo-full">Street art photo placeholder</div>
+
+    <div class="section">
+      <p class="body-text">
+        <strong>Why NFTs?</strong> Because once something is on a chain it cannot be removed anymore. That is real accountability. We live in a time where a lot of people, very powerful people, think that women should not have rights at all; and god forbid either of our skills touch positions of power — because we are too emotional, right?
+      </p>
+    </div>
+
+    <div class="pull-quote">
+      We live in dark times because good people did not call evil out.
+    </div>
+
+    <div class="photo-grid">
+      <div class="photo-placeholder">Photo placeholder 1</div>
+      <div class="photo-placeholder">Photo placeholder 2</div>
+    </div>
+
+    <div class="section">
+      <p class="body-text">
+        Why? Because evil threatens to kill. To take. To exploit. Maybe not even just kill you, kill your family. Kill your friends. You don't agree with me? Die. That's the world we live in.
+      </p>
+      <p class="body-text">
+        Free speech is such a big topic, and yet dictators use it only when it favours them — but they don't really believe in it.
+      </p>
+      <p class="body-text">
+        The antichrist just forgot to look in the mirror. We all know who he is. Our leaders think we are in the apocalypse and that they play a major role in it.
+      </p>
+    </div>
+
+    <div class="photo-full">Photo placeholder — poster close-up</div>
+
+    <div class="section">
+      <p class="body-text">
+        So behold, <strong>Apocalypse Tech</strong>. A project which will spawn satires and actual useful tools to help you navigate this chaotic world of ours.
+      </p>
+    </div>
+
+    <div class="pull-quote">
+      Crypto is the last frontier.<br>
+      Paired with AI it gives us super powers.
+    </div>
+
+    <div class="section">
+      <p class="body-text">
+        We let too many charlatans in and lost our soul. The winter has purged most of the opportunists. It's time to prove crypto's real, decentralised use-case and activate it as a power for good. This is why I built this on crypto specifically.
+      </p>
+    </div>
+
+    <div class="photo-grid">
+      <div class="photo-placeholder">Photo placeholder 3</div>
+      <div class="photo-placeholder">Photo placeholder 4</div>
+    </div>
+
+    <!-- ========== HOW IT WORKS ========== -->
+    <div class="section">
+      <h2 class="section-title">How It Works</h2>
+
+      <p class="body-text">
+        An autonomous bot runs on a Raspberry Pi in a living room somewhere. Every 12 hours it wakes up, scrapes Reddit for misogynistic quotes, runs them through a two-layer AI security guard, generates typographic artwork with kinetic animations, uploads everything to IPFS, mints NFTs on Base, lists them on the marketplace, and posts to Bluesky. No human touches the pipeline.
+      </p>
+
+      <p class="body-text">
+        When someone buys an NFT, the hateful quote transforms into an empowering message about women. The hate becomes strength. Proceeds are split: 50% to <a href="https://refuge.org.uk" target="_blank" rel="noopener"><strong>Refuge</strong></a> (UK domestic abuse charity), 30% to the artist, 20% to keep the bot running.
+      </p>
+    </div>
+
+    <!-- ========== ARCHITECTURE ========== -->
+    <div class="section">
+      <h2 class="section-title">Architecture</h2>
+
+      <div class="arch-diagram">
+  Reddit (16 subreddits + 10 search queries)
+      │
+      ▼
+  Scraper Bot ── Claude Haiku extracts quotes
+      │
+      ▼
+  ┌─ SECURITY GUARD (two layers) ─────────────┐
+  │  Layer 1: Content Sanitizer (regex)        │
+  │  Layer 2: AI Verifier (separate Claude)    │
+  │  + Force Anonymous attribution             │
+  │  + Score gate (>= 90)                      │
+  │  + Daily mint cap (2/day circuit breaker)  │
+  └────────────────────────────────────────────┘
+      │
+      ▼
+  Artwork Generator ── typographic SVG/PNG
+      │
+      ├──▶ Animation Generator (8 styles)
+      │
+      ▼
+  IPFS (Pinata) ── artwork + metadata
+      │
+      ▼
+  Mint ── Base Mainnet (ERC-721)
+      │
+      ├──▶ List on Marketplace
+      ├──▶ Post to Bluesky
+      │
+      ▼
+  PaymentSplitter (on-chain)
+      │
+      ├── 50% → Refuge (charity)
+      ├── 30% → Artist
+      └── 20% → Project
+      </div>
+    </div>
+
+    <!-- ========== ANIMATION STYLES ========== -->
+    <div class="section">
+      <h2 class="section-title">Animation Styles</h2>
+      <p class="body-text">
+        Each NFT is assigned one of 8 kinetic animation styles. The scramble effect is the signature — random characters resolve into the hateful text, forcing you to watch the words form.
+      </p>
+      <div class="tech-stack">
+        <div class="tech-item">
+          <div class="tech-item-title">Scramble</div>
+          <div class="tech-item-desc">Random ASCII resolves into text. The signature style.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Typewriter</div>
+          <div class="tech-item-desc">Characters typed one by one with occasional typos.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Redacted</div>
+          <div class="tech-item-desc">Pink bars lift to reveal scrambled text underneath.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Flicker</div>
+          <div class="tech-item-desc">Text flickers like a dying neon sign.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Heartbeat</div>
+          <div class="tech-item-desc">Text pulses with RGB split and shockwaves.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Corruption</div>
+          <div class="tech-item-desc">Hex data infected by the quote like a virus.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Interactive</div>
+          <div class="tech-item-desc">Characters flee from your cursor. Click to shatter.</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">ASCII Art</div>
+          <div class="tech-item-desc">Giant letters made from misogynistic slur fill chars.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TECH STACK ========== -->
+    <div class="section">
+      <h2 class="section-title">Tech Stack</h2>
+      <div class="tech-stack">
+        <div class="tech-item">
+          <div class="tech-item-title">AI</div>
+          <div class="tech-item-desc">Claude Opus 4.6 (development), Claude Haiku (scraping + classification)</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Chain</div>
+          <div class="tech-item-desc">Base Mainnet (ERC-721) + Ethereum Mainnet (Rare Protocol / SuperRare)</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Hardware</div>
+          <div class="tech-item-desc">Raspberry Pi 3 B+ running autonomously 24/7</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Storage</div>
+          <div class="tech-item-desc">IPFS via Pinata (artwork + metadata)</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Contracts</div>
+          <div class="tech-item-desc">Custom ERC-721, Marketplace, PaymentSplitter (Solidity)</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-title">Agent</div>
+          <div class="tech-item-desc">Claude Code harness, TypeScript pipeline, zero frameworks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== CONTRACTS ========== -->
+    <div class="section">
+      <h2 class="section-title">On-Chain</h2>
+
+      <div class="contract-label">NFT Contract (Base)</div>
+      <div class="contract-addr">0x356Dd09E02960D59f1073F9d22A2634bbE3b1736</div>
+
+      <div class="contract-label">Marketplace (Base)</div>
+      <div class="contract-addr">0xaD60CFbD745CEBFaB39c47cf324e05088f366C1E</div>
+
+      <div class="contract-label">PaymentSplitter (Base)</div>
+      <div class="contract-addr">0xBBb62EC107fd3D49A47cc9AbB2A7C2DeD1D3C6B4</div>
+
+      <div class="contract-label">Rare Protocol Collection (Ethereum Mainnet)</div>
+      <div class="contract-addr">0xDc10B4a90D07843b3629B37E20a557e0F5a7F630</div>
+    </div>
+
+    <!-- ========== CHARITY ========== -->
+    <div class="section">
+      <h2 class="section-title">About Refuge</h2>
+      <p class="body-text">
+        <a href="https://refuge.org.uk" target="_blank" rel="noopener"><strong>Refuge</strong></a> is the UK's largest domestic abuse organisation, supporting over 6,000 women and children on any given day. They run the National Domestic Abuse Helpline (0808 2000 247), a network of safe houses across the country, and services that help women rebuild their lives after abuse.
+      </p>
+      <p class="body-text">
+        50% of all proceeds from MISOGYNY.EXE go directly to Refuge. They are not affiliated with this project. We just think they do vital work.
+      </p>
+    </div>
+
+    <!-- ========== LINKS ========== -->
+    <div class="section">
+      <h2 class="section-title">Links</h2>
+      <p class="body-text" style="line-height: 2.5;">
+        <a href="marketplace.html"><strong>Marketplace</strong></a> — browse and buy<br>
+        <a href="https://bsky.app/profile/misogyny-exe.bsky.social" target="_blank" rel="noopener"><strong>Bluesky</strong></a> — @misogyny-exe (auto-posts on mint)<br>
+        <a href="https://github.com/ApocalypseTech00/misogyny-exe" target="_blank" rel="noopener"><strong>GitHub</strong></a> — open source<br>
+        <a href="https://www.refuge.org.uk/donate/" target="_blank" rel="noopener"><strong>Donate to Refuge</strong></a> — directly
+      </p>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>Misogyny.exe — Apocalypse Tech &middot; 2026</p>
+    <p style="margin-top: 8px;"><a href="https://www.refuge.org.uk" target="_blank" rel="noopener">Refuge</a> &middot; Helpline: 0808 2000 247 (24/7, free)</p>
+  </footer>
+
+</body>
+</html>
