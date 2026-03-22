@@ -40,6 +40,7 @@ import {
   computeQueueHmac,
 } from "./scraper";
 import type { Queue } from "./scraper";
+import { postToSocials } from "./post-to-socials";
 
 const RARE_QUEUE_PATH = path.join(__dirname, "..", "data", "rare-mint-queue.json");
 
@@ -399,6 +400,26 @@ async function processQueue() {
 
       item.status = "done";
       log(`  Done: #${item.id} → token #${item.tokenId}`);
+
+      // Post to social media (non-blocking — mint+auction already succeeded)
+      try {
+        log("  Posting to social media...");
+        const artPng = artworkPath.replace(/\.svg$/, ".png");
+        const socialResults = await postToSocials({
+          quote: item.quote,
+          tokenId: item.tokenId || item.id,
+          artworkPath: fs.existsSync(artPng) ? artPng : undefined,
+        });
+        for (const r of socialResults) {
+          if (r.success) {
+            log(`  [${r.platform}] Posted: ${r.url}`);
+          } else {
+            log(`  [${r.platform}] Skipped: ${r.error}`);
+          }
+        }
+      } catch (socialErr: any) {
+        log(`  Social post error (non-blocking): ${socialErr.message}`);
+      }
     } catch (err: any) {
       item.status = "failed";
       item.error = err.message?.slice(0, 200);

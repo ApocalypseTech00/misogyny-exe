@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+import { postToSocials } from "./post-to-socials";
+
 /**
  * MISOGYNY.EXE — Autonomous Agent (Hardened)
  *
@@ -449,10 +451,40 @@ async function cycle() {
 
   if (hasPending) {
     log("\n[3/3] Minting...");
+    const beforeDone = new Set(
+      queue.items.filter((i) => i.status === "done").map((i) => i.id)
+    );
     const ok = runMinter();
     if (ok) {
       const after = loadQueue();
       totalMinted = after.items.filter((i) => i.status === "done").length;
+
+      // Step 3b: Post newly minted items to social media (fallback — auto-mint also tries)
+      const newlyDone = after.items.filter(
+        (i) => i.status === "done" && !beforeDone.has(i.id) && i.tokenId
+      );
+      for (const item of newlyDone) {
+        try {
+          log(`  Posting token #${item.tokenId} to social media...`);
+          const artPng = path.join(
+            ROOT, "data", "artworks", `${item.tokenId}.png`
+          );
+          const results = await postToSocials({
+            quote: item.quote,
+            tokenId: item.tokenId!,
+            artworkPath: fs.existsSync(artPng) ? artPng : undefined,
+          });
+          for (const r of results) {
+            if (r.success) {
+              log(`  [${r.platform}] Posted: ${r.url}`);
+            } else {
+              log(`  [${r.platform}] Skipped: ${r.error}`);
+            }
+          }
+        } catch (socialErr: any) {
+          log(`  Social post error (non-blocking): ${socialErr.message}`);
+        }
+      }
     }
   } else {
     log("\n[3/3] Nothing to mint");

@@ -55,6 +55,7 @@
     "@typechain/hardhat": "^9.1.0",
     "hardhat": "^2.28.6",
     "pinata": "^2.5.5",
+    "puppeteer": "^24.40.0",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
     "typescript": "^5.9.3"
