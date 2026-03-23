@@ -1,0 +1,318 @@
+{
+  "agent": "MISOGYNY.EXE",
+  "agentId": 34869,
+  "version": "1.0.0",
+  "generatedAt": "2026-03-23T00:18:26.499074Z",
+  "totalCycles": 47,
+  "totalMinted": 9,
+  "totalBlocked": 12,
+  "totalScraped": 842,
+  "cycles": [
+    {
+      "cycleId": 1,
+      "timestamp": "2026-03-11T12:55:18Z",
+      "quotesScraped": 45,
+      "quotesPromoted": 0,
+      "quotesBlocked": 2,
+      "tokensMinted": 0,
+      "note": "First dry run cycle"
+    },
+    {
+      "cycleId": 2,
+      "timestamp": "2026-03-11T13:03:03Z",
+      "quotesScraped": 54,
+      "quotesPromoted": 3,
+      "quotesBlocked": 0,
+      "tokensMinted": 0,
+      "note": "Dry run \u2014 3 candidates queued"
+    },
+    {
+      "cycleId": 3,
+      "timestamp": "2026-03-11T13:33:50Z",
+      "quotesScraped": 38,
+      "quotesPromoted": 0,
+      "quotesBlocked": 1,
+      "tokensMinted": 0,
+      "note": "Guard blocked incitement to violence"
+    },
+    {
+      "cycleId": 4,
+      "timestamp": "2026-03-16T10:00:00Z",
+      "quotesScraped": 62,
+      "quotesPromoted": 1,
+      "quotesBlocked": 2,
+      "tokensMinted": 1,
+      "note": "First Rare Protocol mint on Sepolia"
+    },
+    {
+      "cycleId": 5,
+      "timestamp": "2026-03-20T08:30:00Z",
+      "quotesScraped": 83,
+      "quotesPromoted": 2,
+      "quotesBlocked": 2,
+      "tokensMinted": 0,
+      "note": "Pi first dry run \u2014 83 quotes scraped"
+    },
+    {
+      "cycleId": 6,
+      "timestamp": "2026-03-20T10:00:00Z",
+      "quotesScraped": 41,
+      "quotesPromoted": 1,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Pi first real mint cycle"
+    },
+    {
+      "cycleId": 7,
+      "timestamp": "2026-03-20T12:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #8 \u2014 \"Women should be seen and not heard...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: scramble",
+        "List price: 0.005 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 8,
+      "timestamp": "2026-03-20T13:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #9 \u2014 \"A woman needs a man like a fish needs a bicycle bu...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: scramble",
+        "List price: 0.005 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 9,
+      "timestamp": "2026-03-20T14:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #10 \u2014 \"She got promoted because of her looks not her brai...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: typewriter",
+        "List price: 0.008 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 10,
+      "timestamp": "2026-03-20T15:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #11 \u2014 \"Women are too emotional to be in charge...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: redacted",
+        "List price: 0.003 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 11,
+      "timestamp": "2026-03-20T16:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #12 \u2014 \"Stop being so dramatic it is just a joke...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: flicker",
+        "List price: 0.006 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 12,
+      "timestamp": "2026-03-20T17:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #13 \u2014 \"She was dressed like she wanted attention...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: heartbeat",
+        "List price: 0.01 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 13,
+      "timestamp": "2026-03-20T18:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #14 \u2014 \"If you make your lady cum, you are gay...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: corruption",
+        "List price: 0.001 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 14,
+      "timestamp": "2026-03-20T19:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #15 \u2014 \"Women have ruined the country and should not be al...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: typewriter",
+        "List price: 0.001 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    },
+    {
+      "cycleId": 15,
+      "timestamp": "2026-03-20T20:00:00Z",
+      "quotesScraped": 0,
+      "quotesPromoted": 0,
+      "quotesBlocked": 0,
+      "tokensMinted": 1,
+      "note": "Minted token #16 \u2014 \"She's on her third day of her cycle, hence why she...\"",
+      "toolsUsed": [
+        "reddit_api",
+        "claude_haiku",
+        "content_sanitizer",
+        "claude_ai_verifier",
+        "sharp",
+        "pinata_ipfs",
+        "base_rpc",
+        "bluesky_atproto"
+      ],
+      "decisions": [
+        "Score >= 90: approved for minting",
+        "Animation style: scramble",
+        "List price: 0.001 ETH",
+        "Attribution forced to Anonymous",
+        "HMAC verified before mint"
+      ],
+      "gasCheck": "balance sufficient",
+      "guardResult": "PASS (sanitizer + AI verifier)"
+    }
+  ]
+}

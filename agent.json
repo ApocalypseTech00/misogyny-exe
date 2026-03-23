@@ -1,0 +1,82 @@
+{
+  "name": "MISOGYNY.EXE",
+  "version": "1.0.0",
+  "description": "Autonomous anti-misogyny art bot. Scrapes misogynistic quotes from Reddit, generates typographic artwork with kinetic animations, mints NFTs on Base, and splits proceeds to charity (Refuge UK). Runs unattended on a Raspberry Pi every 12 hours.",
+  "operator_wallet": "0xAC57B6a0F7C665875eD5B2B5dC166a9d4D050072",
+  "identity": {
+    "erc8004_registrations": [
+      {
+        "id": 34869,
+        "label": "MISOGYNY.EXE",
+        "chain": "base",
+        "registry": "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+        "registration_tx": "0x8c8e8c84e4fe8aed603c99c09d467bcfcc28ef4e1be662fd509fbeba21c889cc",
+        "purpose": "Autonomous content curation, art generation, NFT minting, and charity revenue splitting"
+      }
+    ]
+  },
+  "supported_tools": [
+    {"name": "reddit_api", "type": "data_api", "purpose": "Scrape 16 subreddits + 10 search queries for misogynistic content"},
+    {"name": "claude_haiku", "type": "ai_model", "purpose": "Quote extraction, scoring, and classification"},
+    {"name": "claude_ai_verifier", "type": "ai_model", "purpose": "Second-layer security verification (separate call)"},
+    {"name": "content_sanitizer", "type": "security", "purpose": "Regex-based PII/injection/code filtering (22 test cases)"},
+    {"name": "pinata_ipfs", "type": "storage", "purpose": "Upload artwork PNGs and metadata JSON to IPFS"},
+    {"name": "base_rpc", "type": "blockchain_rpc", "purpose": "Mint ERC-721 NFTs and list on marketplace"},
+    {"name": "rare_protocol_cli", "type": "nft_platform", "purpose": "Mint and create auctions via Rare Protocol"},
+    {"name": "bluesky_atproto", "type": "social", "purpose": "Auto-post minted NFTs with artwork images/video"},
+    {"name": "sharp", "type": "image_processing", "purpose": "SVG to PNG conversion (strips script vectors)"},
+    {"name": "ethers_js", "type": "blockchain_sdk", "purpose": "Contract interaction, gas management, balance checks"}
+  ],
+  "autonomous_loop": {
+    "interval": "12 hours",
+    "hardware": "Raspberry Pi 3 B+",
+    "steps": [
+      "SCRAPE: Fetch posts from 16 subreddits + 10 search queries via Reddit API",
+      "CLASSIFY: Claude Haiku extracts quotes, scores them (0-100)",
+      "GUARD Layer 1: Content sanitizer — regex filters for URLs, PII, wallets, code, HTML, injection",
+      "GUARD Layer 2: AI verifier — separate Claude call confirms genuine misogyny, rejects satire/irony/incitement",
+      "FORCE ANONYMOUS: Strip all attribution, replace with 'Anonymous'",
+      "GENERATE: Create typographic SVG artwork, convert to PNG via Sharp",
+      "ANIMATE: Generate kinetic animation HTML (8 styles, weighted random)",
+      "UPLOAD: Pin artwork + metadata to IPFS via Pinata",
+      "MINT: ERC-721 on Base mainnet via Hardhat",
+      "LIST: List on marketplace with enforced royalty split",
+      "POST: Auto-post to Bluesky with artwork image",
+      "AUDIT: Self-review every N cycles, revoke low-quality mints"
+    ]
+  },
+  "safety_guardrails": {
+    "daily_mint_cap": 2,
+    "min_score_threshold": 90,
+    "max_words_per_quote": 25,
+    "forced_anonymous_attribution": true,
+    "hmac_queue_integrity": true,
+    "svg_to_png_sanitization": true,
+    "ipfs_only_image_urls": true,
+    "network_allowlist": ["base-mainnet", "base-sepolia"],
+    "fail_closed_on_api_error": true,
+    "gas_balance_check_before_mint": true
+  },
+  "revenue_split": {
+    "enforced_on_chain": true,
+    "contract": "0xBBb62EC107fd3D49A47cc9AbB2A7C2DeD1D3C6B4",
+    "splits": [
+      {"recipient": "Refuge UK (charity)", "share": "50%"},
+      {"recipient": "Artist", "share": "30%"},
+      {"recipient": "Project operations", "share": "20%"}
+    ]
+  },
+  "compute_budget": {
+    "anthropic_api_per_cycle": "$0.05",
+    "gas_per_mint": "~0.00002 ETH",
+    "monthly_cost": "~$5",
+    "rate_limiting": "Exponential backoff on Reddit 429s, max 3 retries"
+  },
+  "contracts": {
+    "base_mainnet": {
+      "nft": "0x356Dd09E02960D59f1073F9d22A2634bbE3b1736",
+      "marketplace": "0xaD60CFbD745CEBFaB39c47cf324e05088f366C1E",
+      "payment_splitter": "0xBBb62EC107fd3D49A47cc9AbB2A7C2DeD1D3C6B4"
+    }
+  }
+}
