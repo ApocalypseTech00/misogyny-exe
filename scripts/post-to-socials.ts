@@ -60,8 +60,6 @@ export interface PostResult {
 const ALLOWED_MARKETPLACE_DOMAINS = [
   "https://apocalypsetech.xyz/",
   "https://apocalypsetech.surge.sh/",
-  "https://peterthiel.co.uk/",
-  "https://www.peterthiel.co.uk/",
 ];
 const rawMarketplaceUrl =
   process.env.MARKETPLACE_BASE_URL || "https://apocalypsetech.xyz/marketplace.html";
