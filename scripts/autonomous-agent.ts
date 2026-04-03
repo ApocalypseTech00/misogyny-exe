@@ -64,6 +64,69 @@ const LIST_PRICE = process.env.AGENT_LIST_PRICE || "0.001";
 const MAX_PENDING_QUEUE = parseInt(process.env.AGENT_MAX_PENDING || "10");
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 
+// --- Counter-quote generation ---
+
+const COUNTER_QUOTE_PROMPT = `You are part of MISOGYNY.EXE, an anti-misogyny art project. When someone buys an NFT containing a misogynistic quote, the hate transforms into a fact about women's achievement.
+
+Given a misogynistic quote, respond with ONE factual statement about a real woman's achievement that directly counters the claim. Rules:
+- Use real historical facts, records, statistics, or achievements
+- Keep it under 20 words
+- Be specific: name, what she did, when
+- No generic empowerment or motivational quotes
+- Avoid politically divisive topics (COVID, partisan politics, abortion)
+- The fact should directly contradict or undermine the misogynistic claim
+
+Examples:
+- Misogynistic: "Women don't belong in tech" → "Ada Lovelace wrote the first computer algorithm in 1843."
+- Misogynistic: "Women are too emotional to lead" → "Queen Victoria ruled the largest empire in human history for 63 years."
+- Misogynistic: "Women can't do science" → "Marie Curie won two Nobel Prizes in two different sciences."
+- Misogynistic: "Women should stay in the kitchen" → "Valentina Tereshkova flew to space in 1963, twenty years before Sally Ride."
+
+Respond with ONLY the counter-fact. No quotes, no explanation, no preamble.`;
+
+async function generateCounterQuote(misogynisticQuote: string): Promise<string | null> {
+  if (!ANTHROPIC_API_KEY) {
+    log("  Counter-quote: no API key, skipping");
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 100,
+        system: COUNTER_QUOTE_PROMPT,
+        messages: [{ role: "user", content: `Misogynistic quote: "${misogynisticQuote}"` }],
+      }),
+    });
+
+    if (!response.ok) {
+      log(`  Counter-quote API error: ${response.status}`);
+      return null;
+    }
+
+    const data = (await response.json()) as any;
+    const text = (data.content?.[0]?.text || "").trim();
+
+    if (!text || text.length > 200) {
+      log(`  Counter-quote: invalid response (empty or too long)`);
+      return null;
+    }
+
+    log(`  Counter-quote: "${text}"`);
+    return text;
+  } catch (err: any) {
+    log(`  Counter-quote error: ${err.message}`);
+    return null;
+  }
+}
+
 // --- SECURITY: Network allowlist (prevents command injection via env var) ---
 const ALLOWED_NETWORKS = ["base-mainnet", "base-sepolia", "hardhat", "localhost"];
 const NETWORK = process.env.AGENT_NETWORK || "base-mainnet";
@@ -221,8 +284,13 @@ async function autoPromote(): Promise<{ promoted: number; blocked: number }> {
       continue;
     }
 
+    // Generate counter-quote (the positive fact that replaces hate on purchase)
+    log(`  Generating counter-quote...`);
+    const counterQuote = await generateCounterQuote(guardResult.cleaned);
+
     if (DRY_RUN) {
       log(`  [DRY] Would promote: "${guardResult.cleaned.slice(0, 60)}..." (score: ${candidate.score})`);
+      if (counterQuote) log(`  [DRY] Counter: "${counterQuote}"`);
       promoted++;
       continue;
     }
@@ -238,6 +306,7 @@ async function autoPromote(): Promise<{ promoted: number; blocked: number }> {
       listPrice: LIST_PRICE,
       status: "pending" as const,
       hmac: "", // placeholder, computed below
+      counterQuote: counterQuote || undefined,
     };
     newItem.hmac = computeQueueHmac(newItem);
     queue.items.push(newItem);

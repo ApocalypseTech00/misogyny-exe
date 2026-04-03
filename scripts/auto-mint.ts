@@ -42,6 +42,7 @@ interface QueueItem {
   retries?: number;
   lastAttempt?: string;
   hmac?: string;
+  counterQuote?: string;
 }
 
 // HMAC verification for queue integrity (must match scraper.ts)
@@ -285,6 +286,7 @@ async function processItem(
       source: item.source,
       animationCid,
       animationStyle,
+      // counterQuote stored in queue only — revealed on redemption, not in pre-purchase metadata
     });
 
     item.metadataCid = await withRetry(

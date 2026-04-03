@@ -58,14 +58,17 @@ const REDEEMED_TEXT = "#0a0a0a";
 interface RedemptionOpts {
   tokenId: number;
   originalQuote?: string;
+  counterQuote?: string;
   outputDir?: string;
 }
 
 /**
- * Select a random positive quote. Uses tokenId as seed for determinism
- * (same token always gets the same counter-quote).
+ * Select the counter-quote for a token. Prefers the AI-generated counter-quote
+ * stored at mint time. Falls back to the curated pool for older tokens.
  */
-function selectCounterQuote(tokenId: number): string {
+function selectCounterQuote(tokenId: number, stored?: string): string {
+  if (stored) return stored;
+  // Fallback for tokens minted before counter-quote generation was added
   const index = tokenId % POSITIVE_QUOTES.length;
   return POSITIVE_QUOTES[index];
 }
@@ -75,7 +78,7 @@ function selectCounterQuote(tokenId: number): string {
  * Same typographic style but the visual inversion signals transformation.
  */
 function generateRedeemedArtwork(opts: RedemptionOpts): string {
-  const counterQuote = selectCounterQuote(opts.tokenId);
+  const counterQuote = selectCounterQuote(opts.tokenId, opts.counterQuote);
   const dir = opts.outputDir || path.join(__dirname, "..", "data", "artworks", "redeemed");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
@@ -186,7 +189,7 @@ export async function redeemToken(opts: RedemptionOpts & { dryRun?: boolean }): 
   metadataUri?: string;
   txHash?: string;
 }> {
-  const counterQuote = selectCounterQuote(opts.tokenId);
+  const counterQuote = selectCounterQuote(opts.tokenId, opts.counterQuote);
   console.log(`Redeeming token #${opts.tokenId}`);
   console.log(`  Original: "${opts.originalQuote || "(unknown)"}"`);
   console.log(`  Counter:  "${counterQuote}"`);
@@ -254,6 +257,7 @@ export async function redeemToken(opts: RedemptionOpts & { dryRun?: boolean }): 
 async function watchForSales() {
   const indexPath = path.join(__dirname, "..", "data", "index.json");
   const redeemedPath = path.join(__dirname, "..", "data", "redeemed.json");
+  const queuePath = path.join(__dirname, "..", "data", "mint-queue.json");
 
   // Track which tokens have been redeemed
   let redeemed: Set<number>;
@@ -268,6 +272,18 @@ async function watchForSales() {
 
   const checkInterval = 60_000; // check every minute
 
+  // Look up counter-quote from mint queue
+  function findCounterQuote(tokenId: number): string | undefined {
+    try {
+      if (!fs.existsSync(queuePath)) return undefined;
+      const queue = JSON.parse(fs.readFileSync(queuePath, "utf-8"));
+      const item = queue.items?.find((i: any) => i.tokenId === tokenId);
+      return item?.counterQuote;
+    } catch {
+      return undefined;
+    }
+  }
+
   const check = async () => {
     if (!fs.existsSync(indexPath)) return;
 
@@ -279,7 +295,8 @@ async function watchForSales() {
 
       console.log(`\nNew sale detected: token #${sale.tokenId}`);
       try {
-        await redeemToken({ tokenId: sale.tokenId });
+        const counterQuote = findCounterQuote(sale.tokenId);
+        await redeemToken({ tokenId: sale.tokenId, counterQuote });
         redeemed.add(sale.tokenId);
         fs.writeFileSync(redeemedPath, JSON.stringify([...redeemed]));
       } catch (err) {

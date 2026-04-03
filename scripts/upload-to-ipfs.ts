@@ -85,6 +85,7 @@ export function buildMetadata(opts: {
   source?: string;
   animationCid?: string;
   animationStyle?: string;
+  counterQuote?: string;
 }): object {
   return {
     name: opts.name,
@@ -100,6 +101,9 @@ export function buildMetadata(opts: {
         : []),
       ...(opts.animationStyle
         ? [{ trait_type: "Animation", value: opts.animationStyle }]
+        : []),
+      ...(opts.counterQuote
+        ? [{ trait_type: "Counter-Quote", value: opts.counterQuote }]
         : []),
       { trait_type: "Project", value: "MISOGYNY.EXE" },
     ],
