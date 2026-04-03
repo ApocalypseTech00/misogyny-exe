@@ -4636,7 +4636,8 @@ _shaderInits[10] = function() {
   var feed = document.getElementById('police-feed');
   var stats = document.getElementById('feed-stats');
   var allCrimes = [], totalCount = 0, citiesLoaded = 0;
-  var d = new Date(); d.setMonth(d.getMonth() - 2);
+  // Police API data is delayed 3-4 months — try progressively older dates
+  var d = new Date(); d.setMonth(d.getMonth() - 4);
   var date = d.toISOString().slice(0, 7);
   feed.innerHTML = '';
   cities.forEach(function(city) {
