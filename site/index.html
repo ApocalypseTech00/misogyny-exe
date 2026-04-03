@@ -4948,6 +4948,89 @@ _shaderInits[14] = function() {
     requestAnimationFrame(animateM);
   });
 })();
+
+// === Marketplace End CTA — Dithered Graphic (same shader as first) ===
+(function() {
+  var canvasE = document.getElementById('marketplace-dither-canvas-end');
+  if (!canvasE) return;
+  var graphicElE = document.getElementById('marketplace-graphic-end');
+  var sizeE = 512;
+  var rendererE, sceneE, cameraE, materialE;
+  try {
+    rendererE = new THREE.WebGLRenderer({ canvas: canvasE, alpha: true, antialias: false });
+  } catch(e) { return; }
+  rendererE.setSize(sizeE, sizeE, false);
+  rendererE.setPixelRatio(1);
+  sceneE = new THREE.Scene();
+  cameraE = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+  var vertE = 'varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
+  var fragE = [
+    'uniform sampler2D uTexture;',
+    'uniform vec2 uResolution;',
+    'uniform float uPixelSize;',
+    'uniform float uTime;',
+    'uniform float uAgitation;',
+    'varying vec2 vUv;',
+    'float rand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }',
+    'float Bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }',
+    'float Bayer4(vec2 a) { return Bayer2(0.5 * a) * 0.25 + Bayer2(a); }',
+    'float Bayer8(vec2 a) { return Bayer4(0.5 * a) * 0.25 + Bayer2(a); }',
+    'void main() {',
+    '  float ps = uPixelSize + uAgitation * 4.0;',
+    '  vec2 pixelUV = ps / uResolution;',
+    '  vec2 snappedUV = pixelUV * floor(vUv / pixelUV);',
+    '  vec4 color = texture2D(uTexture, snappedUV);',
+    '  if (color.a < 0.1) { discard; }',
+    '  float lum = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));',
+    '  lum = 1.0 - lum;',
+    '  lum *= color.a;',
+    '  if (lum < 0.05) { discard; }',
+    '  float speed = 3.0 + uAgitation * 12.0;',
+    '  float noise = rand(gl_FragCoord.xy * 0.01 + uTime * speed) * (0.25 + uAgitation * 0.5);',
+    '  float breathe = sin(uTime * (1.2 + uAgitation * 3.0)) * (0.1 + uAgitation * 0.2) + sin(uTime * 0.5) * 0.05;',
+    '  lum += breathe;',
+    '  float wobble = uAgitation * 6.0;',
+    '  float dither = Bayer8(gl_FragCoord.xy + vec2(sin(uTime * 2.0) * (3.0 + wobble), cos(uTime * 1.5) * (3.0 + wobble))) + noise * 0.4;',
+    '  float result = step(dither, lum);',
+    '  gl_FragColor = vec4(vec3(0.0), result * 0.9);',
+    '}'
+  ].join('\n');
+
+  var hoveringE = false, agitationE = 0;
+  if (graphicElE) {
+    graphicElE.addEventListener('mouseenter', function() { hoveringE = true; });
+    graphicElE.addEventListener('mouseleave', function() { hoveringE = false; });
+  }
+
+  var loaderE = new THREE.TextureLoader();
+  loaderE.load('slides/marketplace-graphic.svg', function(texture) {
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
+    materialE = new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: { value: texture },
+        uResolution: { value: new THREE.Vector2(sizeE, sizeE) },
+        uPixelSize: { value: 2.5 },
+        uTime: { value: 0.0 },
+        uAgitation: { value: 0.0 }
+      },
+      vertexShader: vertE,
+      fragmentShader: fragE,
+      transparent: true
+    });
+    sceneE.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), materialE));
+    function animateE(t) {
+      requestAnimationFrame(animateE);
+      var targetE = hoveringE ? 1.0 : 0.0;
+      agitationE += (targetE - agitationE) * 0.08;
+      materialE.uniforms.uTime.value = t * 0.001;
+      materialE.uniforms.uAgitation.value = agitationE;
+      rendererE.render(sceneE, cameraE);
+    }
+    requestAnimationFrame(animateE);
+  });
+})();
 </script>
 
 <!-- Analytics — no cookies, no PII -->
