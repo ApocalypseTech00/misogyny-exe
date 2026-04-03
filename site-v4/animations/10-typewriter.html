@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 900;
+  }
+
+  .container {
+    width: 100vmin;
+    height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  /* CRT scanlines — subtle */
+  .container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom, transparent, transparent 1px,
+      rgba(0, 0, 0, 0.12) 1px, rgba(0, 0, 0, 0.12) 2px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none; z-index: 9;
+  }
+
+  .quote-line {
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+    padding: 0 5vmin;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    background: #F918D0;
+    vertical-align: text-bottom;
+    animation: blink 0.53s step-end infinite;
+    margin-left: 2px;
+    box-shadow: 0 0 8px #F918D080;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .label {
+    position: absolute; bottom: 30px;
+    font-size: 10px; color: #F918D030;
+    letter-spacing: 0.3em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+
+<script>
+// --- TYPEWRITER ANIMATION ---
+// Uses textContent on whole lines (no per-char spans) to avoid spacing issues.
+
+const QUOTES = ["She got promoted because of her looks not her brains"];
+
+const LINES_CONFIG = {
+  5:  { wpl: 3, size: 8 },
+  10: { wpl: 3, size: 6 },
+  15: { wpl: 3, size: 5 },
+  25: { wpl: 3, size: 4 },
+};
+
+function getConfig(wc) {
+  if (wc <= 5) return LINES_CONFIG[5];
+  if (wc <= 10) return LINES_CONFIG[10];
+  if (wc <= 18) return LINES_CONFIG[15];
+  return LINES_CONFIG[25];
+}
+
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+let quoteIndex = 0;
+
+function runTypewriter() {
+  const quote = QUOTES[quoteIndex % QUOTES.length];
+  quoteIndex++;
+  const words = quote.split(/\s+/);
+  const config = getConfig(words.length);
+  const lines = breakIntoLines(quote, config.wpl);
+
+  // Flatten into a single string with \n as line separators
+  const fullText = lines.join('\n');
+
+  // Create line elements
+  quoteEl.innerHTML = '';
+  quoteEl.style.opacity = '1';
+  const lineEls = lines.map(() => {
+    const div = document.createElement('div');
+    div.className = 'quote-line';
+    div.style.fontSize = config.size + 'vmin';
+    div.style.lineHeight = '1.3';
+    quoteEl.appendChild(div);
+    return div;
+  });
+
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  cursor.style.height = config.size * 0.8 + 'vmin';
+  cursor.style.width = config.size * 0.4 + 'vmin';
+
+  let pos = 0;
+  let currentLine = 0;
+  let currentText = '';
+  const TYPO_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  // Pick typo positions
+  const typoPositions = new Set();
+  if (fullText.length > 10) {
+    const numTypos = Math.random() < 0.5 ? 1 : 2;
+    for (let t = 0; t < numTypos; t++) {
+      let p = 3 + Math.floor(Math.random() * (fullText.length - 5));
+      if (fullText[p] !== '\n' && fullText[p] !== ' ') typoPositions.add(p);
+    }
+  }
+
+  let typoActive = false;
+
+  function updateDisplay() {
+    lineEls.forEach((el, i) => el.innerHTML = '');
+    lineEls[currentLine].textContent = currentText;
+    lineEls[currentLine].appendChild(cursor.cloneNode(true));
+  }
+
+  function typeNext() {
+    if (typoActive) {
+      // Backspace
+      currentText = currentText.slice(0, -1);
+      updateDisplay();
+      typoActive = false;
+      setTimeout(typeNext, 200 + Math.random() * 150);
+      return;
+    }
+
+    if (pos >= fullText.length) {
+      // Done — hold then fade
+      updateDisplay();
+      setTimeout(() => {
+        // Remove cursor
+        lineEls[currentLine].textContent = currentText;
+        setTimeout(() => {
+          let fade = 1;
+          const fadeInt = setInterval(() => {
+            fade -= 0.03;
+            quoteEl.style.opacity = String(Math.max(0, fade));
+            if (fade <= 0) {
+              clearInterval(fadeInt);
+              quoteEl.style.opacity = '1';
+              setTimeout(runTypewriter, 800);
+            }
+          }, 30);
+        }, 2500);
+      }, 600);
+      return;
+    }
+
+    const ch = fullText[pos];
+
+    if (ch === '\n') {
+      // Finish current line, move to next
+      lineEls[currentLine].textContent = currentText;
+      currentLine++;
+      currentText = '';
+      pos++;
+      setTimeout(typeNext, 200 + Math.random() * 100);
+      return;
+    }
+
+    // Check for typo
+    if (typoPositions.has(pos)) {
+      typoPositions.delete(pos);
+      const wrongChar = TYPO_CHARS[Math.floor(Math.random() * TYPO_CHARS.length)];
+      currentText += wrongChar;
+      updateDisplay();
+      typoActive = true;
+      setTimeout(typeNext, 350 + Math.random() * 200);
+      return;
+    }
+
+    currentText += ch;
+    updateDisplay();
+    pos++;
+
+    const delay = ch === ' '
+      ? 80 + Math.random() * 80
+      : 45 + Math.random() * 70;
+    setTimeout(typeNext, delay);
+  }
+
+  // Initial pause with blinking cursor
+  updateDisplay();
+  setTimeout(typeNext, 1200);
+}
+
+runTypewriter();
+</script>
+</body>
+</html>

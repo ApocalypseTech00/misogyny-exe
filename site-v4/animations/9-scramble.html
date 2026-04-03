@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 900;
+  }
+
+  .container {
+    width: 100vmin;
+    height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  /* CRT scanlines */
+  .container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.15) 1px,
+      rgba(0, 0, 0, 0.15) 2px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Grain overlay */
+  .grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 11;
+    animation: grain-shift 0.1s steps(5) infinite;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  @keyframes grain-shift {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(-2px, 3px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-1px, -3px); }
+    80% { transform: translate(2px, 1px); }
+  }
+
+  /* Vignette */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 9;
+  }
+
+  .quote-line {
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    min-height: 1.2em;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    background: #F918D0;
+    vertical-align: text-bottom;
+    animation: blink 0.7s step-end infinite;
+    margin-left: 2px;
+    box-shadow: 0 0 8px #F918D080;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Glitch flash */
+  @keyframes glitch-flash {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.08; }
+  }
+
+  .glitch-overlay {
+    position: absolute;
+    inset: 0;
+    background: #F918D0;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 8;
+  }
+
+  /* Bottom label */
+  .label {
+    position: absolute;
+    bottom: 30px;
+    font-size: 10px;
+    color: #F918D030;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container" id="container">
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div class="glitch-overlay" id="glitch"></div>
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+
+<script>
+const QUOTE = "A woman needs a man like a fish needs a bicycle but she still needs to cook his dinner";
+const CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`01█▓▒░▄▀■□▪▫';
+const LINES_CONFIG = {
+  // word count -> { wordsPerLine, fontSize (vmin) }
+  5:  { wpl: 3, size: 9 },
+  10: { wpl: 2, size: 7 },
+  15: { wpl: 3, size: 5.5 },
+  25: { wpl: 3, size: 4.5 },
+};
+
+function getConfig(wordCount) {
+  if (wordCount <= 5) return LINES_CONFIG[5];
+  if (wordCount <= 10) return LINES_CONFIG[10];
+  if (wordCount <= 18) return LINES_CONFIG[15];
+  return LINES_CONFIG[25];
+}
+
+// Manual line breaks for specific quotes (artist-controlled)
+const MANUAL_BREAKS = {
+  "SHE WAS ASKING FOR IT": ["SHE WAS", "ASKING", "FOR IT"],
+};
+
+function breakIntoLines(text, wpl) {
+  // Use manual breaks if defined
+  if (MANUAL_BREAKS[text]) return MANUAL_BREAKS[text];
+
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = [];
+  let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+function randomChar() {
+  return CHARS[Math.floor(Math.random() * CHARS.length)];
+}
+
+// --- Animation phases ---
+const quoteEl = document.getElementById('quote');
+const glitchEl = document.getElementById('glitch');
+const words = QUOTE.split(/\s+/);
+const config = getConfig(words.length);
+const lines = breakIntoLines(QUOTE, config.wpl);
+
+// Create line elements
+const lineEls = lines.map(line => {
+  const div = document.createElement('div');
+  div.className = 'quote-line';
+  div.style.fontSize = config.size + 'vmin';
+  div.style.lineHeight = '1.3';
+  quoteEl.appendChild(div);
+  return { el: div, text: line, chars: line.length };
+});
+
+// Add cursor
+const cursorSpan = document.createElement('span');
+cursorSpan.className = 'cursor';
+cursorSpan.style.height = config.size * 0.8 + 'vmin';
+cursorSpan.style.width = config.size * 0.4 + 'vmin';
+
+let phase = 'wait';      // wait -> scramble -> resolve -> hold -> fadeout -> wait
+let frame = 0;
+let currentLine = 0;
+let resolveProgress = 0;
+
+function scrambleText(original, progress) {
+  // progress: 0 = all random, 1 = all resolved
+  let result = '';
+  for (let i = 0; i < original.length; i++) {
+    if (original[i] === ' ') {
+      result += ' ';
+    } else if (i / original.length < progress) {
+      result += original[i];
+    } else {
+      result += randomChar();
+    }
+  }
+  return result;
+}
+
+function glitchFlash() {
+  glitchEl.style.opacity = '0.06';
+  setTimeout(() => { glitchEl.style.opacity = '0'; }, 50);
+}
+
+const WAIT_FRAMES = 60;        // 1 sec blank with cursor
+const SCRAMBLE_SPEED = 2;       // frames per character resolve
+const HOLD_FRAMES = 180;        // 3 sec hold
+const FADEOUT_FRAMES = 60;      // 1 sec fade
+
+function animate() {
+  frame++;
+
+  if (phase === 'wait') {
+    // Show blinking cursor only
+    if (lineEls[0]) {
+      lineEls[0].el.innerHTML = '';
+      lineEls[0].el.appendChild(cursorSpan.cloneNode());
+    }
+    if (frame > WAIT_FRAMES) {
+      phase = 'scramble';
+      frame = 0;
+      currentLine = 0;
+      resolveProgress = 0;
+      glitchFlash();
+    }
+  }
+
+  else if (phase === 'scramble') {
+    // Scramble and resolve line by line
+    const totalChars = lineEls.reduce((sum, l) => sum + l.chars, 0);
+    resolveProgress = Math.min(1, frame / (totalChars * SCRAMBLE_SPEED));
+
+    let charsResolved = Math.floor(resolveProgress * totalChars);
+    let charsSoFar = 0;
+
+    for (let i = 0; i < lineEls.length; i++) {
+      const line = lineEls[i];
+      const lineResolved = Math.max(0, Math.min(1,
+        (charsResolved - charsSoFar) / line.chars
+      ));
+      charsSoFar += line.chars;
+
+      line.el.textContent = scrambleText(line.text, lineResolved);
+
+      // Random glitch on new line start
+      if (lineResolved > 0 && lineResolved < 0.1 && Math.random() < 0.3) {
+        glitchFlash();
+      }
+    }
+
+    // Add cursor to last active line
+    const activeLine = lineEls.findIndex((l, i) => {
+      const before = lineEls.slice(0, i).reduce((s, x) => s + x.chars, 0);
+      return charsResolved <= before + l.chars;
+    });
+    if (activeLine >= 0 && activeLine < lineEls.length) {
+      lineEls[activeLine].el.appendChild(cursorSpan.cloneNode());
+    }
+
+    if (resolveProgress >= 1) {
+      // Fully resolved
+      lineEls.forEach(l => l.el.textContent = l.text);
+      phase = 'hold';
+      frame = 0;
+      glitchFlash();
+    }
+  }
+
+  else if (phase === 'hold') {
+    // Occasional random glitch during hold
+    if (Math.random() < 0.005) {
+      const randomLine = lineEls[Math.floor(Math.random() * lineEls.length)];
+      const saved = randomLine.el.textContent;
+      randomLine.el.textContent = scrambleText(saved, 0.85);
+      setTimeout(() => { randomLine.el.textContent = saved; }, 80);
+    }
+
+    if (frame > HOLD_FRAMES) {
+      phase = 'fadeout';
+      frame = 0;
+    }
+  }
+
+  else if (phase === 'fadeout') {
+    const progress = frame / FADEOUT_FRAMES;
+    quoteEl.style.opacity = String(1 - progress);
+
+    // Scramble back out
+    lineEls.forEach(l => {
+      l.el.textContent = scrambleText(l.text, 1 - progress);
+    });
+
+    if (progress >= 1) {
+      phase = 'wait';
+      frame = 0;
+      quoteEl.style.opacity = '1';
+      lineEls.forEach(l => l.el.textContent = '');
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+
+// --- Cycle through multiple quotes ---
+const QUOTES = ["A woman needs a man like a fish needs a bicycle but she still needs to cook his dinner"];
+let quoteIndex = 0;
+
+function nextQuote() {
+  quoteIndex = (quoteIndex + 1) % QUOTES.length;
+  const newQuote = QUOTES[quoteIndex];
+  const newWords = newQuote.split(/\s+/);
+  const newConfig = getConfig(newWords.length);
+  const newLines = breakIntoLines(newQuote, newConfig.wpl);
+
+  // Rebuild line elements
+  quoteEl.innerHTML = '';
+  lineEls.length = 0;
+  newLines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'quote-line';
+    div.style.fontSize = newConfig.size + 'vmin';
+    div.style.lineHeight = '1.3';
+    quoteEl.appendChild(div);
+    lineEls.push({ el: div, text: line, chars: line.length });
+  });
+}
+
+// Cycle quotes every full animation loop
+setInterval(() => {
+  if (phase === 'wait' && frame < 5) {
+    nextQuote();
+  }
+}, 8000);
+</script>
+</body>
+</html>

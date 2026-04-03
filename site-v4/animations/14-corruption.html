@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas { display: block; position: absolute; inset: 0; z-index: 1; }
+  .container {
+    width: 100vmin; height: 100vmin;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 2;
+  }
+  .quote-line {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+    padding: 0 5vmin;
+    position: relative;
+  }
+  .vignette {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none; z-index: 9;
+  }
+  .label {
+    position: absolute; bottom: 30px;
+    font-family: Georgia, serif;
+    font-size: 10px; color: #F918D030;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="container" id="container">
+  <div id="quote"></div>
+  <span class="label">MISOGYNY.EXE</span>
+</div>
+<div class="vignette"></div>
+
+<script>
+// --- DATA CORRUPTION ---
+// Background: scrolling hex dump / binary data that's being
+// "corrupted" — sections glitch out, replaced by the quote text.
+// The quote infects the data stream like a virus.
+// Eventually the corruption wins and only the quote remains.
+
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const QUOTES = ["If you make your lady cum, you are gay"];
+
+function getConfig(wc) {
+  if (wc <= 5) return { wpl: 3, size: 8 };
+  if (wc <= 10) return { wpl: 3, size: 6 };
+  if (wc <= 18) return { wpl: 3, size: 5 };
+  return { wpl: 3, size: 4 };
+}
+
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) {
+    const take = base + (i < extra ? 1 : 0);
+    lines.push(words.slice(idx, idx + take).join(' '));
+    idx += take;
+  }
+  return lines;
+}
+
+const HEX = '0123456789ABCDEF';
+const charW = 8;
+const charH = 14;
+const cols = Math.ceil(canvas.width / charW);
+const rows = Math.ceil(canvas.height / charH);
+
+// Grid of characters
+let grid = [];
+let gridColor = [];
+function initGrid() {
+  grid = [];
+  gridColor = [];
+  for (let r = 0; r < rows; r++) {
+    grid[r] = [];
+    gridColor[r] = [];
+    for (let c = 0; c < cols; c++) {
+      grid[r][c] = HEX[Math.floor(Math.random() * 16)] + HEX[Math.floor(Math.random() * 16)];
+      gridColor[r][c] = 0; // 0 = dim green/gray, 1 = hot pink (corrupted)
+    }
+  }
+}
+initGrid();
+
+let quoteIndex = 0;
+let corruptionLevel = 0; // 0 to 1
+let phase = 'corrupt'; // corrupt, hold, clean
+let phaseFrame = 0;
+
+const quoteEl = document.getElementById('quote');
+
+function showMainQuote(opacity) {
+  const quote = QUOTES[quoteIndex % QUOTES.length];
+  const words = quote.split(/\s+/);
+  const config = getConfig(words.length);
+  const lines = breakIntoLines(quote, config.wpl);
+  quoteEl.innerHTML = '';
+  lines.forEach(line => {
+    const div = document.createElement('div');
+    div.className = 'quote-line';
+    div.style.fontSize = config.size + 'vmin';
+    div.style.lineHeight = '1.3';
+    div.style.opacity = String(opacity);
+    div.textContent = line;
+    quoteEl.appendChild(div);
+  });
+}
+
+function draw() {
+  phaseFrame++;
+
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '11px "Courier New", monospace';
+
+  const quote = QUOTES[quoteIndex % QUOTES.length];
+  const quoteFlat = quote.replace(/\s+/g, '  ');
+
+  if (phase === 'corrupt') {
+    corruptionLevel = Math.min(1, phaseFrame / 300);
+
+    // Corrupt random cells
+    const corruptionsPerFrame = Math.floor(1 + corruptionLevel * 8);
+    for (let n = 0; n < corruptionsPerFrame; n++) {
+      const r = Math.floor(Math.random() * rows);
+      const c = Math.floor(Math.random() * cols);
+      if (Math.random() < corruptionLevel * 0.8) {
+        // Replace with quote text
+        const qi = (r * cols + c) % quoteFlat.length;
+        grid[r][c] = quoteFlat[qi] + (quoteFlat[(qi + 1) % quoteFlat.length] || ' ');
+        gridColor[r][c] = 1;
+      }
+    }
+
+    if (corruptionLevel >= 1) {
+      phase = 'hold';
+      phaseFrame = 0;
+      showMainQuote(0);
+    }
+  }
+
+  if (phase === 'hold') {
+    const quoteOpacity = Math.min(1, phaseFrame / 60);
+    showMainQuote(quoteOpacity);
+
+    // Keep shifting corrupted cells
+    if (Math.random() < 0.3) {
+      const r = Math.floor(Math.random() * rows);
+      const c = Math.floor(Math.random() * cols);
+      const qi = Math.floor(Math.random() * quoteFlat.length);
+      grid[r][c] = quoteFlat[qi] + (quoteFlat[(qi + 1) % quoteFlat.length] || ' ');
+      gridColor[r][c] = 1;
+    }
+
+    if (phaseFrame > 240) {
+      phase = 'clean';
+      phaseFrame = 0;
+    }
+  }
+
+  if (phase === 'clean') {
+    const cleanProgress = phaseFrame / 120;
+    showMainQuote(Math.max(0, 1 - cleanProgress));
+
+    // Restore cells to hex
+    const cleansPerFrame = Math.floor(2 + cleanProgress * 15);
+    for (let n = 0; n < cleansPerFrame; n++) {
+      const r = Math.floor(Math.random() * rows);
+      const c = Math.floor(Math.random() * cols);
+      if (gridColor[r][c] === 1) {
+        grid[r][c] = HEX[Math.floor(Math.random() * 16)] + HEX[Math.floor(Math.random() * 16)];
+        gridColor[r][c] = 0;
+      }
+    }
+
+    if (phaseFrame > 180) {
+      quoteIndex++;
+      phase = 'corrupt';
+      phaseFrame = 0;
+      initGrid();
+    }
+  }
+
+  // Draw grid
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * charW;
+      const y = r * charH + charH;
+
+      if (gridColor[r][c] === 1) {
+        // Corrupted — hot pink
+        ctx.fillStyle = `rgba(249, 24, 208, ${0.3 + Math.random() * 0.4})`;
+      } else {
+        // Normal — dim green/gray
+        ctx.fillStyle = `rgba(40, 60, 40, ${0.15 + Math.random() * 0.1})`;
+      }
+      ctx.fillText(grid[r][c], x, y);
+    }
+  }
+
+  // Occasional scanline glitch
+  if (Math.random() < 0.03) {
+    const glitchY = Math.floor(Math.random() * canvas.height);
+    const glitchH = 2 + Math.floor(Math.random() * 8);
+    ctx.drawImage(canvas,
+      0, glitchY, canvas.width, glitchH,
+      (Math.random() - 0.5) * 20, glitchY, canvas.width, glitchH
+    );
+  }
+
+  requestAnimationFrame(draw);
+}
+
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

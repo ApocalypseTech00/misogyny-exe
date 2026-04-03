@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer-policy" content="no-referrer">
+  <!-- CSP disabled for hackathon deadline -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>MISOGYNY.EXE — Marketplace</title>
+  <style>
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunrm.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunti.ttf') format('truetype');
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunbx.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'CMU Serif';
+      src: url('fonts/cmunci.ttf') format('truetype');
+      font-weight: 900;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F918D0;
+      --bg-card: rgba(0, 0, 0, 0.08);
+      --bg-card-hover: rgba(0, 0, 0, 0.14);
+      --border: #cc15aa;
+      --border-active: #1a1a1a;
+      --text: #1a1a1a;
+      --text-dim: #3a1a30;
+      --text-muted: #6a3a5a;
+      --accent: #1a1a1a;
+      --accent-dark: #000;
+      --accent-text: #F918D0;
+      --danger: #8b0000;
+      --success: #1a1a1a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'CMU Serif', serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      text-transform: uppercase;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* --- HEADER --- */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+    }
+    .header-title a { text-decoration: none; color: var(--text); }
+    .header-title a:hover { opacity: 0.7; }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .header-nav a {
+      font-family: 'CMU Serif', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--text);
+      letter-spacing: 0.1em;
+      text-decoration: none;
+    }
+    .header-nav a:hover { font-weight: 900; }
+
+    .header-nav .nav-cta {
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 8px 16px;
+      font-weight: 900;
+    }
+    .header-nav .nav-cta:hover { opacity: 0.85; }
+
+    @media (max-width: 600px) {
+      .header { padding: 10px 16px; }
+      .header-title { font-size: 0.8rem; }
+      .header-nav { gap: 0.8rem; }
+      .header-nav a { font-size: 0.65rem; }
+      .header-nav .nav-cta { padding: 6px 10px; }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-family: 'CMU Serif', serif;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn:disabled:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .btn-danger:hover {
+      color: #fff;
+    }
+
+    .btn-solid {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-solid:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+      color: #fff;
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: var(--bg);
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.65rem;
+    }
+
+    /* --- WALLET INFO --- */
+    .wallet-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .wallet-addr {
+      font-size: 0.7rem;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border);
+    }
+
+    .wallet-bal {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .network-badge {
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .network-badge.correct { border-color: var(--text); color: var(--text); }
+    .network-badge.wrong { border-color: var(--danger); color: var(--danger); }
+
+    /* --- HERO BANNER --- */
+    .hero-banner {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-logo-wrap {
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 2rem;
+      aspect-ratio: 1;
+      object-fit: contain;
+    }
+
+    #hero-dither-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hero-heading {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-desc {
+      max-width: 600px;
+      margin: 0 auto 1rem;
+      font-size: 1.15rem;
+      line-height: 1.9;
+      color: var(--text);
+      text-transform: none;
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    .hero-sub {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      margin-top: 1rem;
+    }
+
+    /* --- MAIN LAYOUT --- */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* --- STATS BAR --- */
+    .stats-bar {
+      display: flex;
+      gap: 2rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1.5rem;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+    }
+
+    /* --- TABS + VIEW TOGGLE --- */
+    .tabs-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 0.25rem;
+      padding-bottom: 0.4rem;
+    }
+
+    .view-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.4rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    .view-btn:hover { color: var(--text-dim); }
+    .view-btn.active { color: var(--text); border-color: var(--border); }
+
+    .tab {
+      padding: 0.8rem 1.5rem;
+      font-family: 'CMU Serif', serif;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { color: var(--text-dim); }
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
+    /* --- GRID --- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      transition: all 0.4s ease;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card:hover {
+      border-color: var(--border-active);
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+    }
+
+    /* Scanline overlay */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      opacity: 0.4;
+      transition: opacity 0.3s;
+      z-index: 1;
+    }
+
+    .card:hover::after {
+      opacity: 1;
+    }
+
+    /* RGB glitch on hover */
+    .card-img {
+      position: relative;
+    }
+
+    .card-img img {
+      transition: filter 0.2s;
+    }
+
+    .card:hover .card-img img {
+      animation: rgb-glitch 0.3s steps(2) 1;
+    }
+
+    @keyframes rgb-glitch {
+      0% { filter: none; }
+      20% { filter: drop-shadow(3px 0 0 rgba(255, 0, 100, 0.5)) drop-shadow(-3px 0 0 rgba(0, 255, 255, 0.5)); transform: translate(1px, 0); }
+      40% { filter: drop-shadow(-2px 0 0 rgba(255, 0, 100, 0.4)) drop-shadow(2px 0 0 rgba(0, 255, 255, 0.4)); transform: translate(-1px, 1px); }
+      60% { filter: drop-shadow(2px 1px 0 rgba(255, 0, 100, 0.6)) drop-shadow(-2px -1px 0 rgba(0, 255, 255, 0.6)); transform: translate(0, -1px); }
+      80% { filter: drop-shadow(-1px 0 0 rgba(255, 0, 100, 0.3)) drop-shadow(1px 0 0 rgba(0, 255, 255, 0.3)); transform: translate(1px, 0); }
+      100% { filter: none; transform: none; }
+    }
+
+    .card-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-img .placeholder {
+      font-family: 'CMU Serif', serif;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .card-title {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .card-quote {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: none;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-price {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .card-owner {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .card-badge {
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      letter-spacing: 0.1em;
+    }
+
+    .badge-listed { border: 1px solid var(--text); color: var(--text); }
+    .badge-yours { border: 1px solid var(--text-dim); color: var(--text-dim); }
+    .badge-sold { border: 1px solid var(--text-muted); color: var(--text-muted); }
+
+    /* --- SCROLL / FEED VIEW --- */
+    .grid.scroll-view {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .grid.scroll-view .card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .grid.scroll-view .card-img {
+      aspect-ratio: 1;
+    }
+
+    .grid.scroll-view .card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .grid.scroll-view .card-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .grid.scroll-view .card-quote {
+      font-size: 0.85rem;
+      -webkit-line-clamp: unset;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .grid.scroll-view .card-footer {
+      border-top: none;
+      padding: 0 1.5rem 1.5rem;
+      grid-column: span 2;
+    }
+
+    .grid.scroll-view .card-price {
+      font-size: 1.3rem;
+    }
+
+    @media (max-width: 600px) {
+      .grid.scroll-view .card {
+        grid-template-columns: 1fr;
+      }
+      .grid.scroll-view .card-footer {
+        grid-column: span 1;
+      }
+    }
+
+    /* --- MODAL --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #e617bf;
+      border: 1px solid var(--border);
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.5rem;
+      cursor: pointer;
+      font-family: 'CMU Serif', serif;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .modal-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img img { width: 100%; height: 100%; object-fit: contain; }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-title {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-quote {
+      text-transform: none;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .modal-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border);
+    }
+
+    .modal-meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-meta-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.2rem;
+    }
+
+    .modal-meta-value {
+      font-size: 0.75rem;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .modal-price-input {
+      background: rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'CMU Serif', serif;
+      font-size: 0.8rem;
+      padding: 0.6rem;
+      text-transform: uppercase;
+      width: 150px;
+    }
+
+    .modal-price-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal-price-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* --- TOAST --- */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      padding: 0.8rem 1.2rem;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      border: 1px solid #333;
+      font-size: 0.7rem;
+      max-width: 400px;
+      animation: toast-in 0.3s ease;
+    }
+
+    .toast.success { border-color: #F918D0; }
+    .toast.error { border-color: #ff4444; color: #ff6666; }
+    .toast.info { border-color: #666; }
+
+    .toast a { font-size: 0.65rem; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- EMPTY STATE --- */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-family: 'CMU Serif', serif;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--border);
+    }
+
+    .empty-text {
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* --- LOADING --- */
+    .loading {
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .loading-dots span {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* --- ROYALTY INFO --- */
+    .royalty-info {
+      margin-top: 3rem;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .royalty-title {
+      font-family: 'CMU Serif', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .royalty-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      font-size: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .royalty-row:last-child { border: none; }
+    .royalty-pct { color: var(--text); font-weight: 700; }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 600px) {
+      .hero-banner { padding: 3rem 1.5rem 2rem; }
+      .hero-desc { font-size: 1.05rem; }
+      .tabs-row { flex-wrap: wrap; gap: 0.5rem; }
+      .header { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+      .header-nav { width: 100%; justify-content: flex-end; }
+      .main { padding: 1rem; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+      .stats-bar { gap: 1rem; }
+      .modal { margin: 0; max-height: 100vh; }
+      .modal-meta { grid-template-columns: 1fr; }
+      .toast-container { bottom: 1rem; right: 1rem; left: 1rem; }
+      .toast { max-width: 100%; }
+      .wallet-info { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title"><a href="index.html">Misogyny.exe</a></div>
+    <div class="header-nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="https://www.refuge.org.uk/donate/" target="_blank" rel="noopener" class="nav-cta">Donate to Refuge</a>
+      <div id="wallet-section">
+        <button class="btn" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero-banner">
+    <div class="hero-logo-wrap">
+      <canvas id="hero-dither-canvas"></canvas>
+    </div>
+    <h1 class="hero-heading">The Gallery</h1>
+    <p class="hero-desc">
+      An autonomous art bot scrapes the internet for misogynistic quotes,
+      turns them into typographic artworks, and mints them here.
+      Every sale splits proceeds: 50% to charity (<a href="https://refuge.org.uk" target="_blank" rel="noopener">Refuge</a>), 30% to the artist, 20% to keep the bot running.
+      <a href="https://apocalypsetech.xyz" target="_blank" rel="noopener">Learn more about the project.</a>
+    </p>
+    <p class="hero-sub">
+      You can't stop the bot. You can own what it makes.
+    </p>
+    <p style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-dim); text-transform: none; font-style: normal;">
+      The bot auto-posts to <a href="https://bsky.app/profile/misogyny-exe.bsky.social" target="_blank" rel="noopener">Bluesky @misogyny-exe</a>
+    </p>
+    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: var(--text-dim); text-transform: none; font-style: normal;">
+      *Charity proceeds are transferred to <a href="https://refuge.org.uk" target="_blank" rel="noopener">Refuge</a> on a rolling basis. Proof of transfers will be posted publicly. This is v1 — full automation of the off-ramp pipeline is in progress.
+    </p>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value" id="stat-total">—</span>
+        <span class="stat-label">Minted</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-listed">—</span>
+        <span class="stat-label">Listed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-sold">—</span>
+        <span class="stat-label">Sales</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-floor">—</span>
+        <span class="stat-label">Floor</span>
+      </div>
+    </div>
+
+    <!-- TABS + VIEW TOGGLE -->
+    <div class="tabs-row">
+      <div class="tabs">
+        <button class="tab active" data-tab="all" onclick="switchTab('all')">All</button>
+        <button class="tab" data-tab="listed" onclick="switchTab('listed')">For Sale</button>
+        <button class="tab" data-tab="mine" onclick="switchTab('mine')">Yours</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="grid" onclick="switchView('grid')" title="Grid">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="1" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="10" width="7" height="7" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="10" width="7" height="7" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <button class="view-btn" data-view="scroll" onclick="switchView('scroll')" title="Scroll">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="4" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="7" width="16" height="4" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="13" width="16" height="4" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div id="grid-loading" class="loading">
+      <div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>
+      Loading
+    </div>
+    <div id="grid" class="grid" style="display:none;"></div>
+    <div id="grid-empty" class="empty" style="display:none;">
+      <div class="empty-icon">///</div>
+      <div class="empty-text">Nothing here yet</div>
+    </div>
+
+    <!-- ROYALTY INFO -->
+    <div class="royalty-info">
+      <div class="royalty-title">How Proceeds Are Split</div>
+      <div class="royalty-row">
+        <span>Seller receives</span>
+        <span class="royalty-pct">85%</span>
+      </div>
+      <div class="royalty-row" style="border-bottom: none; padding-bottom: 0;">
+        <span>15% royalty split:</span>
+        <span></span>
+      </div>
+      <div class="royalty-row" style="padding-left: 1rem;">
+        <span>Charity (Refuge)</span>
+        <span class="royalty-pct">5%</span>
+      </div>
+      <div class="royalty-row" style="padding-left: 1rem;">
+        <span>Artist</span>
+        <span class="royalty-pct">5%</span>
+      </div>
+      <div class="royalty-row" style="padding-left: 1rem;">
+        <span>Project</span>
+        <span class="royalty-pct">5%</span>
+      </div>
+      <div class="royalty-row" style="font-size: 0.65rem; color: var(--text-muted); border: none;">
+        <span>*Initial mint proceeds split 50% charity / 30% artist / 20% project via on-chain PaymentSplitter</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div class="modal-img" id="modal-img"></div>
+      <div class="modal-body">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-quote" id="modal-quote"></div>
+        <div class="modal-meta" id="modal-meta"></div>
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toast-container" id="toasts"></div>
+
+  <!-- THREE.JS (for dither shader) -->
+  <script src="three.min.js"></script>
+
+  <!-- ETHERS.JS (bundled locally — never trust CDN for wallet-signing code) -->
+  <script src="ethers.min.js"></script>
+
+  <script>
+    // ============================================================
+    // CONFIG — Update these after deploying V3 contracts
+    // ============================================================
+    const CONFIG = {
+      // Base Mainnet
+      chainId: 8453,
+      chainName: 'Base',
+      rpcUrl: 'https://base.drpc.org',
+      blockExplorer: 'https://basescan.org',
+
+      // V4 Redemption contracts (Base mainnet)
+      nftAddress: '0x5A0a0C118f4dBa766368F979491611ba24384508',
+      marketplaceAddress: '0x838fD6Fe91292978Df19BeacF8aD8444134C31D0',
+
+      // IPFS gateway for resolving ipfs:// URIs
+      ipfsGateway: 'https://gateway.pinata.cloud/ipfs/',
+    };
+
+    // Minimal ABIs for frontend interaction
+    const NFT_ABI = [
+      'function totalSupply() view returns (uint256)',
+      'function ownerOf(uint256 tokenId) view returns (address)',
+      'function tokenURI(uint256 tokenId) view returns (string)',
+      'function name() view returns (string)',
+      'function symbol() view returns (string)',
+      'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)',
+    ];
+
+    const MARKETPLACE_ABI = [
+      'function listings(uint256 tokenId) view returns (address seller, uint256 price)',
+      'function list(uint256 tokenId, uint256 price)',
+      'function buy(uint256 tokenId) payable',
+      'function cancel(uint256 tokenId)',
+      'function ROYALTY_BPS() view returns (uint256)',
+      'function charityWallet() view returns (address)',
+      'function botWallet() view returns (address)',
+      'function artistWallet() view returns (address)',
+      'event Listed(uint256 indexed tokenId, address indexed seller, uint256 price)',
+      'event Sold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 price)',
+      'event Cancelled(uint256 indexed tokenId, address indexed seller)',
+    ];
+
+    // ============================================================
+    // SECURITY — HTML escaping for untrusted data (NFT metadata)
+    // ============================================================
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+    }
+
+    function sanitizeUrl(url) {
+      if (typeof url !== 'string') return '';
+      // SECURITY: Only allow IPFS gateways — blocks tracking pixels, malicious images
+      if (url.startsWith('ipfs://')) return CONFIG.ipfsGateway + url.slice(7);
+      if (url.startsWith('https://gateway.pinata.cloud/ipfs/')) return url;
+      if (url.startsWith('https://ipfs.io/ipfs/')) return url;
+      if (url.startsWith('https://cloudflare-ipfs.com/ipfs/')) return url;
+      if (url.startsWith('https://dweb.link/ipfs/')) return url;
+      return ''; // Block all other URLs (tracking pixels, arbitrary https, javascript:, data:)
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let provider = null;
+    let signer = null;
+    let userAddress = null;
+    let nftContract = null;
+    let marketplaceContract = null;
+    let tokens = []; // { tokenId, owner, uri, metadata, listing }
+    let currentTab = 'all';
+
+    // Auto-load tokens with read-only provider (no wallet needed to browse)
+    // Load tokens from static JSON index (no RPC needed for browsing)
+    async function autoLoad() {
+      showLoading(true);
+      try {
+        const res = await fetch('tokens.json');
+        const data = await res.json();
+        tokens = data.map(t => ({
+          tokenId: t.tokenId,
+          owner: '0x0',
+          uri: '',
+          metadata: {
+            name: t.name,
+            image: `nft-images/${t.tokenId}.png`,
+            attributes: [
+              { trait_type: 'Quote', value: t.quote },
+              { trait_type: 'Attribution', value: t.attribution },
+              { trait_type: 'Animation', value: t.animStyle },
+            ],
+          },
+          listing: { price: ethers.parseEther(t.price), seller: '0x0' },
+        }));
+
+        document.getElementById('stat-total').textContent = tokens.length;
+        const listed = tokens.filter(t => t.listing.price > 0n);
+        document.getElementById('stat-listed').textContent = listed.length;
+        if (listed.length > 0) {
+          const floor = listed.reduce((min, t) => t.listing.price < min ? t.listing.price : min, listed[0].listing.price);
+          document.getElementById('stat-floor').textContent = ethers.formatEther(floor) + ' ETH';
+        }
+        document.getElementById('stat-sold').textContent = '0';
+      } catch (err) {
+        console.error('Token index load failed:', err);
+      }
+      showLoading(false);
+      renderGrid();
+    }
+    autoLoad();
+
+    // ============================================================
+    // WALLET
+    // ============================================================
+    async function connectWallet() {
+      if (!window.ethereum) {
+        toast('Install MetaMask or another wallet', 'error');
+        return;
+      }
+
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send('eth_requestAccounts', []);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        // Check network
+        const network = await provider.getNetwork();
+        const onCorrectChain = Number(network.chainId) === CONFIG.chainId;
+
+        updateWalletUI(userAddress, onCorrectChain);
+
+        if (!onCorrectChain) {
+          toast(`Switch to ${CONFIG.chainName}`, 'error');
+          await switchNetwork();
+          return;
+        }
+
+        // Upgrade contracts to use signer (enables buy/list/delist)
+        if (CONFIG.nftAddress && CONFIG.marketplaceAddress) {
+          nftContract = new ethers.Contract(CONFIG.nftAddress, NFT_ABI, signer);
+          marketplaceContract = new ethers.Contract(CONFIG.marketplaceAddress, MARKETPLACE_ABI, signer);
+          await loadTokens(); // Reload with signer context
+        } else {
+          toast('Contract addresses not configured', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        toast('Wallet connection failed', 'error');
+      }
+    }
+
+    async function switchNetwork() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x' + CONFIG.chainId.toString(16) }],
+        });
+        await connectWallet();
+      } catch (err) {
+        if (err.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x' + CONFIG.chainId.toString(16),
+              chainName: CONFIG.chainName,
+              rpcUrls: [CONFIG.rpcUrl],
+              blockExplorerUrls: [CONFIG.blockExplorer],
+              nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+            }],
+          });
+          await connectWallet();
+        }
+      }
+    }
+
+    function updateWalletUI(addr, correctChain) {
+      const section = document.getElementById('wallet-section');
+      const short = addr.slice(0, 6) + '...' + addr.slice(-4);
+
+      section.innerHTML = `
+        <div class="wallet-info">
+          <span class="network-badge ${correctChain ? 'correct' : 'wrong'}">${correctChain ? CONFIG.chainName : 'Wrong Network'}</span>
+          <span class="wallet-addr">${short}</span>
+          <button class="btn btn-sm" onclick="disconnectWallet()">×</button>
+        </div>
+      `;
+    }
+
+    function disconnectWallet() {
+      provider = null;
+      signer = null;
+      userAddress = null;
+      nftContract = null;
+      marketplaceContract = null;
+      tokens = [];
+
+      document.getElementById('wallet-section').innerHTML =
+        '<button class="btn" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>';
+      renderGrid();
+    }
+
+    // ============================================================
+    // LOAD TOKENS
+    // ============================================================
+    async function loadTokens() {
+      showLoading(true);
+      tokens = [];
+
+      try {
+        const total = Number(await nftContract.totalSupply());
+        document.getElementById('stat-total').textContent = total;
+
+        // Fetch all tokens in parallel
+        // Skip tokens 1-7 (old test mints with placeholder art)
+        // Load sequentially to avoid RPC rate limits
+        tokens = [];
+        for (let i = 8; i <= total; i++) {
+          const t = await loadToken(i);
+          tokens.push(t);
+        }
+
+        // Compute stats
+        const listed = tokens.filter(t => t.listing.price > 0n);
+        document.getElementById('stat-listed').textContent = listed.length;
+
+        if (listed.length > 0) {
+          const floor = listed.reduce((min, t) =>
+            t.listing.price < min ? t.listing.price : min,
+            listed[0].listing.price
+          );
+          document.getElementById('stat-floor').textContent =
+            ethers.formatEther(floor) + ' ETH';
+        } else {
+          document.getElementById('stat-floor').textContent = '—';
+        }
+
+        // Count sales from events (quick scan last 10k blocks)
+        try {
+          const currentBlock = await provider.getBlockNumber();
+          const fromBlock = Math.max(0, currentBlock - 10000);
+          const soldFilter = marketplaceContract.filters.Sold();
+          const soldEvents = await marketplaceContract.queryFilter(soldFilter, fromBlock);
+          document.getElementById('stat-sold').textContent = soldEvents.length;
+        } catch {
+          document.getElementById('stat-sold').textContent = '—';
+        }
+
+      } catch (err) {
+        console.error('Failed to load tokens:', err);
+        toast('Failed to load tokens', 'error');
+      }
+
+      showLoading(false);
+      renderGrid();
+    }
+
+    async function loadToken(tokenId) {
+      try {
+        const owner = await nftContract.ownerOf(tokenId).catch(() => '0x0');
+        const uri = await nftContract.tokenURI(tokenId).catch(() => '');
+        const listing = await marketplaceContract.listings(tokenId).catch(() => ({ seller: '0x0', price: 0n }));
+
+        let metadata = null;
+        if (uri) {
+          try {
+            const url = resolveIPFS(uri);
+            console.log('Fetching metadata for token', tokenId);
+            const res = await fetch(url);
+            metadata = await res.json();
+          } catch (err) {
+            console.error('Metadata fetch failed for token', tokenId, ':', err);
+          }
+        }
+
+        return { tokenId, owner, uri, metadata, listing };
+      } catch (err) {
+        console.error('loadToken failed for', tokenId, ':', err);
+        return { tokenId, owner: '0x0', uri: '', metadata: null, listing: { seller: '0x0', price: 0n } };
+      }
+    }
+
+    function resolveIPFS(uri) {
+      return sanitizeUrl(uri);
+    }
+
+    // ============================================================
+    // RENDER
+    // ============================================================
+    function showLoading(show) {
+      document.getElementById('grid-loading').style.display = show ? 'block' : 'none';
+      if (show) {
+        document.getElementById('grid').style.display = 'none';
+        document.getElementById('grid-empty').style.display = 'none';
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('grid-empty');
+
+      let filtered = tokens;
+      if (currentTab === 'listed') {
+        filtered = tokens.filter(t => t.listing.price > 0n);
+      } else if (currentTab === 'mine') {
+        filtered = tokens.filter(t =>
+          userAddress && t.owner.toLowerCase() === userAddress.toLowerCase()
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.style.display = currentView === 'scroll' ? 'flex' : 'grid';
+      if (currentView === 'scroll') grid.classList.add('scroll-view');
+      else grid.classList.remove('scroll-view');
+      grid.innerHTML = filtered.map(t => renderCard(t)).join('');
+      animateCardsIn();
+    }
+
+    function animateCardsIn() {
+      const cards = document.querySelectorAll('.card');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const card = entry.target;
+            const idx = Array.from(cards).indexOf(card);
+            setTimeout(() => card.classList.add('visible'), idx * 80);
+            observer.unobserve(card);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      cards.forEach(card => observer.observe(card));
+    }
+
+    function renderCard(t) {
+      const isOwner = userAddress && t.owner.toLowerCase() === userAddress.toLowerCase();
+      const isListed = t.listing.price > 0n;
+      const name = escapeHtml(t.metadata?.name || `MISOGYNY.EXE #${t.tokenId}`);
+      const quote = escapeHtml(t.metadata?.attributes?.find(a => a.trait_type === 'Quote')?.value || '');
+      const imgUrl = escapeHtml(t.metadata?.image ? resolveIPFS(t.metadata.image) : '');
+
+      let badge = '';
+      let priceHtml = '';
+
+      if (isListed) {
+        priceHtml = `<span class="card-price">${escapeHtml(ethers.formatEther(t.listing.price))} ETH</span>`;
+        badge = isOwner
+          ? '<span class="card-badge badge-yours">Your Listing</span>'
+          : '<span class="card-badge badge-listed">For Sale</span>';
+      } else {
+        priceHtml = '<span class="card-price" style="color:var(--text-muted);">Not listed</span>';
+        if (isOwner) badge = '<span class="card-badge badge-yours">Yours</span>';
+      }
+
+      const localImg = `nft-images/${Number(t.tokenId)}.png`;
+
+      return `
+        <div class="card" onclick="openModal(${Number(t.tokenId)})">
+          <div class="card-img">
+            <img src="${localImg}" alt="${name}" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title">${name}</div>
+            ${quote ? `<div class="card-quote">"${quote}"</div>` : ''}
+          </div>
+          <div class="card-footer">
+            ${priceHtml}
+            ${badge}
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // TABS
+    // ============================================================
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.tab === tab);
+      });
+      renderGrid();
+    }
+
+    let currentView = 'grid';
+
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-btn').forEach(el => {
+        el.classList.toggle('active', el.dataset.view === view);
+      });
+      renderGrid();
+    }
+
+    // ============================================================
+    // MODAL
+    // ============================================================
+    function openModal(tokenId) {
+      const t = tokens.find(t => t.tokenId === tokenId);
+      if (!t) return;
+
+      const isOwner = userAddress && t.owner.toLowerCase() === userAddress.toLowerCase();
+      const isListed = t.listing.price > 0n;
+      const name = t.metadata?.name || `MISOGYNY.EXE #${t.tokenId}`;
+      const quote = t.metadata?.attributes?.find(a => a.trait_type === 'Quote')?.value || '';
+      const attribution = t.metadata?.attributes?.find(a => a.trait_type === 'Attribution')?.value || '';
+      const imgUrl = t.metadata?.image ? resolveIPFS(t.metadata.image) : '';
+
+      const modalImg = document.getElementById('modal-img');
+      const animUrl = t.metadata?.animation_url ? resolveIPFS(t.metadata.animation_url) : '';
+
+      // Try to load animation from Surge-hosted files
+      const animStyle = t.metadata?.attributes?.find(a => a.trait_type === 'Animation')?.value;
+      const animPath = animStyle ? `animations/${Number(t.tokenId)}-${animStyle}.html` : '';
+
+      if (animPath) {
+        // Show static image first with loading indicator, then swap to animation
+        const localImg = `nft-images/${Number(t.tokenId)}.png`;
+        modalImg.innerHTML = `
+          <div style="position:relative;width:100%;height:100%;">
+            <img src="${localImg}" alt="${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+            <div id="anim-loading" style="position:absolute;bottom:12px;right:12px;font-size:0.7rem;color:#F918D080;letter-spacing:0.1em;text-transform:uppercase;font-family:CMU Serif,serif;">Loading animation...</div>
+            <iframe src="${escapeHtml(animPath)}" style="width:100%;height:100%;border:none;position:absolute;inset:0;opacity:0;transition:opacity 0.5s;" sandbox="allow-scripts" onload="this.style.opacity='1';document.getElementById('anim-loading')?.remove();"></iframe>
+          </div>`;
+      } else if (imgUrl) {
+        const img = document.createElement('img');
+        img.src = imgUrl;
+        img.alt = escapeHtml(name);
+        modalImg.innerHTML = '';
+        modalImg.appendChild(img);
+      } else {
+        modalImg.innerHTML = '<span class="placeholder" style="font-size:2rem;">No Image</span>';
+      }
+
+      document.getElementById('modal-title').textContent = name;
+      document.getElementById('modal-quote').textContent =
+        quote ? `"${quote}" — ${attribution}` : '';
+
+      // Meta info — all values escaped
+      const ownerShort = escapeHtml(t.owner.slice(0, 6) + '...' + t.owner.slice(-4));
+      const safeUri = escapeHtml(t.uri || '');
+      const safeResolvedUri = escapeHtml(resolveIPFS(t.uri || ''));
+      let metaHtml = `
+        <div class="modal-meta-item">
+          <span class="modal-meta-label">Token ID</span>
+          <span class="modal-meta-value">#${Number(t.tokenId)}</span>
+        </div>
+        <div class="modal-meta-item">
+          <span class="modal-meta-label">Owner</span>
+          <span class="modal-meta-value">${isOwner ? 'You' : ownerShort}</span>
+        </div>
+      `;
+
+      if (isListed) {
+        metaHtml += `
+          <div class="modal-meta-item">
+            <span class="modal-meta-label">Price</span>
+            <span class="modal-meta-value" style="color:var(--accent)">${escapeHtml(ethers.formatEther(t.listing.price))} ETH</span>
+          </div>
+          <div class="modal-meta-item">
+            <span class="modal-meta-label">Seller receives</span>
+            <span class="modal-meta-value">${escapeHtml(ethers.formatEther(t.listing.price * 85n / 100n))} ETH (85%)</span>
+          </div>
+        `;
+      }
+
+      if (t.uri) {
+        metaHtml += `
+          <div class="modal-meta-item" style="grid-column: span 2">
+            <span class="modal-meta-label">Metadata</span>
+            <span class="modal-meta-value"><a href="${safeResolvedUri}" target="_blank" rel="noopener">${safeUri}</a></span>
+          </div>
+        `;
+      }
+
+      document.getElementById('modal-meta').innerHTML = metaHtml;
+
+      // Actions
+      let actionsHtml = '';
+
+      if (!userAddress) {
+        actionsHtml = '<button class="btn btn-solid" onclick="connectWallet()">Connect to Buy</button>';
+      } else if (isOwner && isListed) {
+        actionsHtml = `<button class="btn btn-danger" onclick="cancelListing(${t.tokenId})">Cancel Listing</button>`;
+      } else if (isOwner && !isListed) {
+        actionsHtml = `
+          <input type="text" class="modal-price-input" id="list-price" placeholder="Price in ETH">
+          <button class="btn btn-solid" onclick="listToken(${t.tokenId})">List for Sale</button>
+        `;
+      } else if (isListed && !isOwner) {
+        actionsHtml = `
+          <button class="btn btn-solid" onclick="buyToken(${t.tokenId})">
+            Buy for ${ethers.formatEther(t.listing.price)} ETH
+          </button>
+        `;
+      }
+
+      document.getElementById('modal-actions').innerHTML = actionsHtml;
+
+      document.getElementById('modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // ============================================================
+    // ACTIONS
+    // ============================================================
+    async function buyToken(tokenId) {
+      if (!marketplaceContract) return;
+
+      const t = tokens.find(t => t.tokenId === tokenId);
+      if (!t || t.listing.price === 0n) return;
+
+      try {
+        toast('Sending transaction...', 'info');
+        const tx = await marketplaceContract.buy(tokenId, { value: t.listing.price });
+        toast('Transaction submitted. Waiting for confirmation...', 'info');
+
+        const receipt = await tx.wait();
+        toast(
+          `Purchased! <a href="${CONFIG.blockExplorer}/tx/${escapeHtml(tx.hash)}" target="_blank" rel="noopener">View TX</a>`,
+          'success', true
+        );
+
+        closeModal();
+        await loadTokens();
+      } catch (err) {
+        console.error(err);
+        const msg = err.reason || err.message || 'Transaction failed';
+        toast(msg.slice(0, 100), 'error');
+      }
+    }
+
+    async function listToken(tokenId) {
+      if (!marketplaceContract) return;
+
+      const priceInput = document.getElementById('list-price');
+      const priceStr = priceInput?.value?.trim();
+      if (!priceStr || isNaN(parseFloat(priceStr)) || parseFloat(priceStr) <= 0) {
+        toast('Enter a valid price', 'error');
+        return;
+      }
+
+      try {
+        const price = ethers.parseEther(priceStr);
+        toast('Sending transaction...', 'info');
+        const tx = await marketplaceContract.list(tokenId, price);
+        toast('Transaction submitted. Waiting for confirmation...', 'info');
+
+        await tx.wait();
+        toast(
+          `Listed for ${escapeHtml(priceStr)} ETH! <a href="${CONFIG.blockExplorer}/tx/${escapeHtml(tx.hash)}" target="_blank" rel="noopener">View TX</a>`,
+          'success', true
+        );
+
+        closeModal();
+        await loadTokens();
+      } catch (err) {
+        console.error(err);
+        const msg = err.reason || err.message || 'Transaction failed';
+        toast(msg.slice(0, 100), 'error');
+      }
+    }
+
+    async function cancelListing(tokenId) {
+      if (!marketplaceContract) return;
+
+      try {
+        toast('Sending transaction...', 'info');
+        const tx = await marketplaceContract.cancel(tokenId);
+        toast('Transaction submitted. Waiting for confirmation...', 'info');
+
+        await tx.wait();
+        toast(
+          `Listing cancelled. <a href="${CONFIG.blockExplorer}/tx/${escapeHtml(tx.hash)}" target="_blank" rel="noopener">View TX</a>`,
+          'success', true
+        );
+
+        closeModal();
+        await loadTokens();
+      } catch (err) {
+        console.error(err);
+        const msg = err.reason || err.message || 'Transaction failed';
+        toast(msg.slice(0, 100), 'error');
+      }
+    }
+
+    // ============================================================
+    // TOASTS
+    // ============================================================
+    function toast(message, type = 'info', isHtml = false) {
+      const container = document.getElementById('toasts');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      if (isHtml) {
+        el.innerHTML = message; // Only for trusted internal HTML (TX links)
+      } else {
+        el.textContent = message; // Safe default for untrusted strings
+      }
+      container.appendChild(el);
+
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.3s';
+        setTimeout(() => el.remove(), 300);
+      }, 6000);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Auto-connect if wallet was previously connected
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', () => location.reload());
+      window.ethereum.on('chainChanged', () => location.reload());
+    }
+
+    // Preview mode: show mock cards if wallet not connected
+    if (!userAddress) {
+      const mockQuotes = [
+        { q: "Women are nothing but machines for producing children.", a: "Napoleon Bonaparte", price: "0.001" },
+        { q: "The feminist agenda is not about equal rights for women. It is about a socialist, anti-family political movement.", a: "Pat Robertson", price: "0.003" },
+        { q: "Women have simple minds.", a: "Arthur Schopenhauer", price: "0.002" },
+        { q: "Feminism was established so as to allow unattractive women access to the mainstream of society.", a: "Rush Limbaugh", price: "0.005" },
+        { q: "The most mediocre of males feels himself a demigod as compared with women.", a: "Simone de Beauvoir", price: "0.002" },
+        { q: "Nature intended women to be our slaves. They are our property.", a: "Napoleon Bonaparte", price: "0.004" },
+        { q: "Women should remain at home, sit still, keep house, and bear and bring up children.", a: "Martin Luther", price: "0.001" },
+        { q: "I do not think women ought to sit in counsel with men.", a: "Mother Teresa", price: "0.008" },
+      ];
+
+      tokens = mockQuotes.map((m, i) => ({
+        tokenId: i + 1,
+        owner: '0x0000000000000000000000000000000000000000',
+        uri: '',
+        metadata: {
+          name: `MISOGYNY.EXE #${i + 1}`,
+          image: '',
+          attributes: [
+            { trait_type: 'Quote', value: m.q },
+            { trait_type: 'Attribution', value: m.a },
+          ],
+        },
+        listing: { seller: '0x36FC3c61e58aF94502f67B72Aa46A601f90749Be', price: ethers.parseEther(m.price) },
+      }));
+
+      document.getElementById('stat-total').textContent = tokens.length;
+      document.getElementById('stat-listed').textContent = tokens.length;
+      document.getElementById('stat-sold').textContent = '0';
+      const floor = tokens.reduce((min, t) => t.listing.price < min ? t.listing.price : min, tokens[0].listing.price);
+      document.getElementById('stat-floor').textContent = ethers.formatEther(floor) + ' ETH';
+
+      showLoading(false);
+      renderGrid();
+    }
+
+    // ============================================================
+    // HERO DITHER SHADER
+    // ============================================================
+    (function() {
+      var canvas = document.getElementById('hero-dither-canvas');
+      if (!canvas || typeof THREE === 'undefined') return;
+
+      var size = 440; // render at 2x for retina
+      var renderer, scene, camera, material;
+
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false });
+      } catch(e) { return; }
+
+      renderer.setSize(size, size, false);
+      renderer.setPixelRatio(1);
+
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+      var vertShader = [
+        'varying vec2 vUv;',
+        'void main() {',
+        '  vUv = uv;',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+        '}'
+      ].join('\n');
+
+      var fragShader = [
+        'uniform sampler2D uTexture;',
+        'uniform vec2 uResolution;',
+        'uniform float uPixelSize;',
+        'uniform float uTime;',
+        'varying vec2 vUv;',
+        '',
+        'float rand(vec2 co) {',
+        '  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);',
+        '}',
+        '',
+        'float Bayer2(vec2 a) {',
+        '  a = floor(a);',
+        '  return fract(a.x / 2.0 + a.y * a.y * 0.75);',
+        '}',
+        'float Bayer4(vec2 a) { return Bayer2(0.5 * a) * 0.25 + Bayer2(a); }',
+        'float Bayer8(vec2 a) { return Bayer4(0.5 * a) * 0.25 + Bayer2(a); }',
+        '',
+        'void main() {',
+        '  float logoSize = 0.75;',
+        '  vec2 logoUV = vec2((vUv.x - 0.5) / logoSize + 0.5, (vUv.y - 0.5) / logoSize + 0.5);',
+        '  float lum;',
+        '  if (logoUV.x < 0.0 || logoUV.x > 1.0 || logoUV.y < 0.0 || logoUV.y > 1.0) {',
+        '    gl_FragColor = vec4(0.0); return;',
+        '  }',
+        '  vec2 pixelUV = uPixelSize / uResolution;',
+        '  vec2 snappedUV = clamp(pixelUV * floor(logoUV / pixelUV), vec2(0.0), vec2(1.0));',
+        '  vec4 color = texture2D(uTexture, snappedUV);',
+        '  if (color.a < 0.1) { gl_FragColor = vec4(0.0); return; }',
+        '  lum = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));',
+        '  lum = 1.0 - lum;',
+        '  lum *= color.a;',
+        '  float noise = rand(gl_FragCoord.xy * 0.01 + uTime * 3.0) * 0.25;',
+        '  float breathe = sin(uTime * 1.2) * 0.1 + sin(uTime * 0.5) * 0.05;',
+        '  lum += breathe;',
+        '  float dither = Bayer8(gl_FragCoord.xy + vec2(sin(uTime * 2.0), cos(uTime * 1.5)) * 3.0) + noise * 0.4;',
+        '  float result = step(dither, lum);',
+        '  gl_FragColor = vec4(vec3(0.0), result * 0.85);',
+        '}'
+      ].join('\n');
+
+      var loader = new THREE.TextureLoader();
+      loader.load('logo.png', function(texture) {
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+
+        material = new THREE.ShaderMaterial({
+          uniforms: {
+            uTexture: { value: texture },
+            uResolution: { value: new THREE.Vector2(size, size) },
+            uPixelSize: { value: 3.0 },
+            uTime: { value: 0.0 }
+          },
+          vertexShader: vertShader,
+          fragmentShader: fragShader,
+          transparent: true
+        });
+
+        var quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(quad);
+
+        function animate(t) {
+          requestAnimationFrame(animate);
+          material.uniforms.uTime.value = t * 0.001;
+          renderer.render(scene, camera);
+        }
+        requestAnimationFrame(animate);
+      });
+    })();
+  </script>
+
+</body>
+</html>
