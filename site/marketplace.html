@@ -821,7 +821,8 @@
     <p class="hero-desc">
       An autonomous art bot scrapes the internet for misogynistic quotes,
       turns them into typographic artworks, and mints them here.
-      Every sale splits proceeds: 50% to charity (<a href="https://refuge.org.uk" target="_blank" rel="noopener">Refuge</a>), 30% to the artist, 20% to keep the bot running.
+      An autonomous art bot scrapes the internet for misogynistic quotes,
+      turns them into typographic artworks, and mints them here. All proceeds are split between charity, the artist, and the project.
       <a href="https://apocalypsetech.xyz" target="_blank" rel="noopener">Learn more about the project.</a>
     </p>
     <p class="hero-sub">
@@ -829,9 +830,6 @@
     </p>
     <p style="margin-top: 1rem; font-size: 0.95rem; color: var(--text-dim); text-transform: none; font-style: normal;">
       The bot auto-posts to <a href="https://bsky.app/profile/misogyny-exe.bsky.social" target="_blank" rel="noopener">Bluesky @misogyny-exe</a>
-    </p>
-    <p style="margin-top: 0.8rem; font-size: 0.9rem; color: var(--text-dim); text-transform: none; font-style: normal;">
-      *Charity proceeds are transferred to <a href="https://refuge.org.uk" target="_blank" rel="noopener">Refuge</a> on a rolling basis. Proof of transfers will be posted publicly. This is v1 — full automation of the off-ramp pipeline is in progress.
     </p>
   </div>
 
@@ -889,28 +887,43 @@
     <!-- ROYALTY INFO -->
     <div class="royalty-info">
       <div class="royalty-title">How Proceeds Are Split</div>
+
+      <div style="font-size: 0.8rem; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.1em;">Primary Sales (Initial Purchase)</div>
+      <div class="royalty-row">
+        <span>Charity (<a href="https://refuge.org.uk" target="_blank" rel="noopener" style="color: inherit;">Refuge</a>)</span>
+        <span class="royalty-pct">50%</span>
+      </div>
+      <div class="royalty-row">
+        <span>Artist</span>
+        <span class="royalty-pct">30%</span>
+      </div>
+      <div class="royalty-row">
+        <span>Project (keeps the bot running)</span>
+        <span class="royalty-pct">20%</span>
+      </div>
+      <div class="royalty-row" style="font-size: 0.65rem; color: var(--text-muted); border: none;">
+        <span>Enforced on-chain via PaymentSplitter contract</span>
+      </div>
+
+      <div style="font-size: 0.8rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.1em;">Secondary Sales (Resales)</div>
       <div class="royalty-row">
         <span>Seller receives</span>
         <span class="royalty-pct">85%</span>
       </div>
-      <div class="royalty-row" style="border-bottom: none; padding-bottom: 0;">
-        <span>15% royalty split:</span>
-        <span></span>
-      </div>
-      <div class="royalty-row" style="padding-left: 1rem;">
-        <span>Charity (Refuge)</span>
+      <div class="royalty-row">
+        <span>Charity (<a href="https://refuge.org.uk" target="_blank" rel="noopener" style="color: inherit;">Refuge</a>)</span>
         <span class="royalty-pct">5%</span>
       </div>
-      <div class="royalty-row" style="padding-left: 1rem;">
+      <div class="royalty-row">
         <span>Artist</span>
         <span class="royalty-pct">5%</span>
       </div>
-      <div class="royalty-row" style="padding-left: 1rem;">
+      <div class="royalty-row">
         <span>Project</span>
         <span class="royalty-pct">5%</span>
       </div>
       <div class="royalty-row" style="font-size: 0.65rem; color: var(--text-muted); border: none;">
-        <span>*Initial mint proceeds split 50% charity / 30% artist / 20% project via on-chain PaymentSplitter</span>
+        <span>15% total royalty on every resale, enforced on-chain via Marketplace contract</span>
       </div>
     </div>
   </div>
