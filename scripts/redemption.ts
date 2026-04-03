@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import dotenv from "dotenv";
 import { generateArtwork, convertToPng } from "./generate-artwork";
 import { uploadFile, uploadJSON, buildMetadata } from "./upload-to-ipfs";
+import { generateRedeemedAnimation } from "./generate-redeemed-animation";
 
 dotenv.config({ path: [".env.local", ".env"] });
 
@@ -176,11 +177,13 @@ const NFT_ABI = [
 
 /**
  * Full redemption pipeline for a single token:
- *   1. Generate redeemed artwork
+ *   1. Generate redeemed artwork (SVG)
  *   2. Convert to PNG
- *   3. Upload artwork to IPFS via Pinata
- *   4. Upload metadata to IPFS
- *   5. Call updateTokenURI on-chain
+ *   3. Generate redeemed animation (HTML with glitch transition)
+ *   4. Upload artwork to IPFS
+ *   5. Upload animation to IPFS
+ *   6. Upload metadata to IPFS (counter-quote revealed)
+ *   7. Call updateTokenURI on-chain
  */
 export async function redeemToken(opts: RedemptionOpts & { dryRun?: boolean }): Promise<{
   counterQuote: string;
@@ -204,30 +207,48 @@ export async function redeemToken(opts: RedemptionOpts & { dryRun?: boolean }): 
   await sharp(svgPath).resize(1000, 1000).png({ quality: 90 }).toFile(pngPath);
   console.log(`  PNG: ${pngPath}`);
 
+  // 3. Generate redeemed animation
+  const originalQuote = opts.originalQuote || "MISOGYNY";
+  console.log("  Generating redeemed animation...");
+  const { htmlPath: animPath, style: animStyle } = generateRedeemedAnimation({
+    id: opts.tokenId,
+    hateQuote: originalQuote,
+    counterQuote,
+  });
+  console.log(`  Animation: ${animPath} (${animStyle})`);
+
   if (opts.dryRun) {
     console.log("  [DRY RUN] Skipping IPFS upload and on-chain update");
     return { counterQuote, svgPath, pngPath };
   }
 
-  // 3. Upload artwork to IPFS
+  // 4. Upload artwork to IPFS
   console.log("  Uploading artwork to IPFS...");
   const imageCid = await uploadFile(pngPath, `misogyny-exe-${opts.tokenId}-redeemed.png`);
   console.log(`  Image CID: ${imageCid}`);
 
-  // 4. Upload metadata to IPFS
+  // 5. Upload animation to IPFS
+  console.log("  Uploading animation to IPFS...");
+  const animationCid = await uploadFile(animPath, `misogyny-exe-${opts.tokenId}-redeemed-anim.html`);
+  console.log(`  Animation CID: ${animationCid}`);
+
+  // 6. Upload metadata to IPFS (counter-quote revealed here)
   const metadata = buildMetadata({
     name: `MISOGYNY.EXE #${opts.tokenId} — REDEEMED`,
     description: `This piece has been redeemed. What was once hate is now strength. Original misogynistic quote transformed on purchase.`,
     imageCid,
     quote: counterQuote,
     attribution: "Redeemed",
+    animationCid,
+    animationStyle: animStyle,
+    counterQuote,
   });
 
   const metadataCid = await uploadJSON(metadata, `misogyny-exe-${opts.tokenId}-redeemed-metadata.json`);
   const metadataUri = `ipfs://${metadataCid}`;
   console.log(`  Metadata URI: ${metadataUri}`);
 
-  // 5. Call updateTokenURI on-chain
+  // 7. Call updateTokenURI on-chain
   const NFT_ADDRESS = process.env.V3_NFT_ADDRESS;
   const PRIVATE_KEY = process.env.PRIVATE_KEY;
   const RPC_URL = process.env.BASE_MAINNET_RPC_URL || "https://mainnet.base.org";
@@ -272,15 +293,15 @@ async function watchForSales() {
 
   const checkInterval = 60_000; // check every minute
 
-  // Look up counter-quote from mint queue
-  function findCounterQuote(tokenId: number): string | undefined {
+  // Look up original quote + counter-quote from mint queue
+  function findQueueData(tokenId: number): { quote?: string; counterQuote?: string } {
     try {
-      if (!fs.existsSync(queuePath)) return undefined;
+      if (!fs.existsSync(queuePath)) return {};
       const queue = JSON.parse(fs.readFileSync(queuePath, "utf-8"));
       const item = queue.items?.find((i: any) => i.tokenId === tokenId);
-      return item?.counterQuote;
+      return { quote: item?.quote, counterQuote: item?.counterQuote };
     } catch {
-      return undefined;
+      return {};
     }
   }
 
@@ -295,8 +316,8 @@ async function watchForSales() {
 
       console.log(`\nNew sale detected: token #${sale.tokenId}`);
       try {
-        const counterQuote = findCounterQuote(sale.tokenId);
-        await redeemToken({ tokenId: sale.tokenId, counterQuote });
+        const { quote, counterQuote } = findQueueData(sale.tokenId);
+        await redeemToken({ tokenId: sale.tokenId, originalQuote: quote, counterQuote });
         redeemed.add(sale.tokenId);
         fs.writeFileSync(redeemedPath, JSON.stringify([...redeemed]));
       } catch (err) {
