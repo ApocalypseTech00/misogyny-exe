@@ -1029,28 +1029,38 @@
     let tokens = []; // { tokenId, owner, uri, metadata, listing }
     let currentTab = 'all';
 
-    // Auto-load tokens with read-only provider (no wallet needed to browse)
-    // Load tokens from static JSON index (no RPC needed for browsing)
+    // Auto-load tokens from chain with read-only provider (no wallet needed to browse)
     async function autoLoad() {
       showLoading(true);
       try {
-        const res = await fetch('tokens.json');
-        const data = await res.json();
-        tokens = data.map(t => ({
-          tokenId: t.tokenId,
-          owner: '0x0',
-          uri: '',
-          metadata: {
-            name: t.name,
-            image: `nft-images/${t.tokenId}.png`,
-            attributes: [
-              { trait_type: 'Quote', value: t.quote },
-              { trait_type: 'Attribution', value: t.attribution },
-              { trait_type: 'Animation', value: t.animStyle },
-            ],
-          },
-          listing: { price: ethers.parseEther(t.price), seller: '0x0' },
-        }));
+        const readProvider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+        const readNft = new ethers.Contract(CONFIG.nftAddress, NFT_ABI, readProvider);
+        const readMkt = new ethers.Contract(CONFIG.marketplaceAddress, MARKETPLACE_ABI, readProvider);
+
+        const total = Number(await readNft.totalSupply());
+        document.getElementById('stat-total').textContent = total;
+
+        tokens = [];
+        for (let i = 1; i <= total; i++) {
+          try {
+            const owner = await readNft.ownerOf(i).catch(() => null);
+            if (!owner) continue; // Token doesn't exist (burned or gap)
+
+            const uri = await readNft.tokenURI(i).catch(() => '');
+            const listing = await readMkt.listings(i).catch(() => ({ seller: '0x0', price: 0n }));
+
+            let metadata = null;
+            if (uri) {
+              try {
+                const url = resolveIPFS(uri);
+                const res = await fetch(url);
+                metadata = await res.json();
+              } catch {}
+            }
+
+            tokens.push({ tokenId: i, owner, uri, metadata, listing });
+          } catch {}
+        }
 
         document.getElementById('stat-total').textContent = tokens.length;
         const listed = tokens.filter(t => t.listing.price > 0n);
@@ -1059,9 +1069,9 @@
           const floor = listed.reduce((min, t) => t.listing.price < min ? t.listing.price : min, listed[0].listing.price);
           document.getElementById('stat-floor').textContent = ethers.formatEther(floor) + ' ETH';
         }
-        document.getElementById('stat-sold').textContent = '0';
+        document.getElementById('stat-sold').textContent = '—';
       } catch (err) {
-        console.error('Token index load failed:', err);
+        console.error('Auto-load from chain failed:', err);
       }
       showLoading(false);
       renderGrid();
@@ -1170,13 +1180,11 @@
         const total = Number(await nftContract.totalSupply());
         document.getElementById('stat-total').textContent = total;
 
-        // Fetch all tokens in parallel
-        // Skip tokens 1-7 (old test mints with placeholder art)
-        // Load sequentially to avoid RPC rate limits
+        // Load all tokens sequentially to avoid RPC rate limits
         tokens = [];
-        for (let i = 8; i <= total; i++) {
+        for (let i = 1; i <= total; i++) {
           const t = await loadToken(i);
-          tokens.push(t);
+          if (t.owner !== '0x0') tokens.push(t); // Skip burned/non-existent tokens
         }
 
         // Compute stats
