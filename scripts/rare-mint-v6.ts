@@ -183,6 +183,10 @@ async function generateAndPin(item: QueueItem): Promise<void> {
   if (needAnim) {
     const anim = generateAnimation({ id: item.id, quote: item.quote });
     animStyle = anim.style;
+    // Persist the local path so captureMp4ForBluesky can use it directly instead
+    // of guessing filenames. animStyle is also recoverable from the filename but
+    // storing the path is the source of truth.
+    (item as any).animationLocalPath = anim.htmlPath;
     item.animationCid = await uploadFile(anim.htmlPath, `misogyny-exe-${item.id}-anim.html`);
     log(`  animation CID ${item.animationCid} (${anim.style})`);
   }
@@ -314,34 +318,31 @@ async function listOnSplitGuard(item: QueueItem): Promise<void> {
 }
 
 /**
- * Capture MP4 from the pinned HTML animation (ipfs://... → local) for Bluesky.
+ * Capture MP4 from the local HTML animation for Bluesky.
  * MP4 is NOT pinned to IPFS — posted directly via AT Protocol (V6 spec §10.4).
+ *
+ * Uses the local path persisted by `generateAndPin` (`animationLocalPath`).
+ * Falls back to a directory scan only if the persisted path is missing (e.g.
+ * cleaned up between runs or a legacy queue item from before this field existed).
  */
 async function captureMp4ForBluesky(item: QueueItem): Promise<string | null> {
-  // We have the HTML on IPFS at item.animationCid — simplest is to regenerate locally
-  // (deterministic per tokenId / style), because the original file is already written
-  // by generate-animation.ts and lives under data/artworks/animations/.
-  const animPath = path.join(
-    __dirname,
-    "..",
-    "data",
-    "artworks",
-    "animations",
-    `${item.id}-scramble.html`
-  );
-  // Fallback: look for any file matching this id
-  let htmlPath = animPath;
-  if (!fs.existsSync(htmlPath)) {
-    const dir = path.dirname(animPath);
+  let htmlPath: string | undefined = (item as any).animationLocalPath;
+
+  if (!htmlPath || !fs.existsSync(htmlPath)) {
+    // Fallback: scan the animations dir for any file for this tokenId
+    const dir = path.join(__dirname, "..", "data", "artworks", "animations");
     if (fs.existsSync(dir)) {
-      const candidates = fs.readdirSync(dir).filter((f) => f.startsWith(`${item.id}-`) && f.endsWith(".html"));
+      const candidates = fs.readdirSync(dir)
+        .filter((f) => f.startsWith(`${item.id}-`) && f.endsWith(".html"));
       if (candidates.length > 0) htmlPath = path.join(dir, candidates[0]);
     }
   }
-  if (!fs.existsSync(htmlPath)) {
+
+  if (!htmlPath || !fs.existsSync(htmlPath)) {
     log(`  MP4 skipped — no local HTML animation found for #${item.id}`);
     return null;
   }
+
   try {
     const mp4Path = await captureHtmlToMp4({ htmlPath, tokenId: item.id, kind: "mint" });
     log(`  MP4 captured ${mp4Path}`);

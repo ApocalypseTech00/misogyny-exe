@@ -68,16 +68,22 @@ description = "Pinata JWT env assignment"
 regex = '''PINATA_JWT\s*=\s*eyJ'''
 keywords = ["PINATA_JWT"]
 
-# Allowlist: test fixtures + .env.example (template placeholders)
-[[allowlist.paths]]
-regex = '''\.env\.example$'''
-
-[[allowlist.paths]]
-regex = '''test/.*\.test\.(ts|js)$'''
-
-[[allowlist.paths]]
-regex = '''contracts/test/.*\.sol$'''
-
-# Allow the COLDIE_AUCTION constant (looks like a hex blob but is public bytecode)
-[[allowlist.regexes]]
-regex = '''0x434f4c4449455f41554354494f4e0+'''
+# Allowlist: test fixtures + .env.example (template placeholders) + the COLDIE_AUCTION
+# public bytes32 constant (looks like a hex blob but is a known marketplace constant).
+[allowlist]
+paths = [
+  '''\.env\.example$''',
+  '''test/.*\.test\.(ts|js)$''',
+  '''contracts/test/.*\.sol$''',
+  # Third-party minified libraries — reviewed, known-good. ethers.js trips the
+  # default `generic-api-key` rule because its bytecode blobs match high-entropy
+  # hex regexes.
+  '''.*\.min\.js$''',
+  # Spec docs contain env-var PLACEHOLDER lines (ANTHROPIC_API_KEY=, etc.) that
+  # the default generic-api-key rule flags. Real leaks in code are still caught
+  # by the project-specific rules above.
+  '''docs/.*\.md$''',
+]
+regexes = [
+  '''0x434f4c4449455f41554354494f4e0+''',
+]

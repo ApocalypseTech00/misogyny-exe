@@ -1,8 +1,8 @@
 {
   "name": "MISOGYNY.EXE",
-  "version": "1.0.0",
-  "description": "Autonomous anti-misogyny art bot. Scrapes misogynistic quotes from Reddit, generates typographic artwork with kinetic animations, mints NFTs on Base, and splits proceeds to charity (Refuge UK). Runs unattended on a Raspberry Pi every 12 hours.",
-  "operator_wallet": "0xAC57B6a0F7C665875eD5B2B5dC166a9d4D050072",
+  "version": "6.0.0",
+  "description": "Autonomous anti-misogyny art bot. Scrapes misogynistic quotes from Reddit, generates typographic artwork with kinetic animations, mints NFTs on Ethereum via Rare Protocol. Operator approves roasts at scrape time via Telegram; the roast fires instantly on sale, inscribed permanently on-chain. Revenue split on-chain via SplitGuard (50/30/20 — Refuge UK / artist / project). Runs unattended on a Raspberry Pi every 12 hours.",
+  "operator_wallet": "BOT_ADDRESS — set per deployment, stored in .env on the Pi; DEPLOYER_A/DEPLOYER_B/TREASURY wallets are operator-side, not on the Pi.",
   "identity": {
     "erc8004_registrations": [
       {
@@ -16,63 +16,86 @@
     ]
   },
   "supported_tools": [
-    {"name": "reddit_api", "type": "data_api", "purpose": "Scrape 16 subreddits + 10 search queries for misogynistic content"},
-    {"name": "claude_haiku", "type": "ai_model", "purpose": "Quote extraction, scoring, and classification"},
-    {"name": "claude_ai_verifier", "type": "ai_model", "purpose": "Second-layer security verification (separate call)"},
-    {"name": "content_sanitizer", "type": "security", "purpose": "Regex-based PII/injection/code filtering (22 test cases)"},
-    {"name": "pinata_ipfs", "type": "storage", "purpose": "Upload artwork PNGs and metadata JSON to IPFS"},
-    {"name": "base_rpc", "type": "blockchain_rpc", "purpose": "Mint ERC-721 NFTs and list on marketplace"},
-    {"name": "rare_protocol_cli", "type": "nft_platform", "purpose": "Mint and create auctions via Rare Protocol"},
-    {"name": "bluesky_atproto", "type": "social", "purpose": "Auto-post minted NFTs with artwork images/video"},
-    {"name": "sharp", "type": "image_processing", "purpose": "SVG to PNG conversion (strips script vectors)"},
-    {"name": "ethers_js", "type": "blockchain_sdk", "purpose": "Contract interaction, gas management, balance checks"}
+    { "name": "reddit_api", "type": "data_api", "purpose": "Scrape 16 subreddits + 10 search queries via residential IP" },
+    { "name": "claude_sonnet_4_6", "type": "ai_model", "purpose": "Generate 3 roast candidates per quote" },
+    { "name": "claude_haiku_4_5", "type": "ai_model", "purpose": "Scraper extraction + guard verifier + roast picker" },
+    { "name": "content_sanitizer", "type": "security", "purpose": "Regex-based PII / injection / code filtering before any AI call" },
+    { "name": "telegram_bot_api", "type": "approval", "purpose": "Operator approval flow at scrape time (pick 1/2/3 roast, regen cap 3, 72h expiry, weekly digest)" },
+    { "name": "pinata_ipfs", "type": "storage", "purpose": "Pin PNG + HTML + metadata (NOT MP4 — MP4 is Bluesky-only)" },
+    { "name": "ethereum_rpc", "type": "blockchain_rpc", "purpose": "Mint via CollectionAdmin, list via SplitGuard, register quotes + inscribe comebacks on QuoteRegistry" },
+    { "name": "rare_protocol_bazaar", "type": "nft_marketplace", "purpose": "Auction mechanism; invoked via SplitGuard immutable wrapper" },
+    { "name": "bluesky_atproto", "type": "social", "purpose": "Post MP4 of mint + MP4 of redemption glitch animation" },
+    { "name": "puppeteer_ffmpeg", "type": "video", "purpose": "Capture HTML animation to MP4 for Bluesky (800x800 / 30fps / H.264 yuv420p)" },
+    { "name": "viem", "type": "blockchain_sdk", "purpose": "Contract interaction, tx receipt parsing, Transfer-event tokenId extraction" }
   ],
   "autonomous_loop": {
     "interval": "12 hours",
-    "hardware": "Raspberry Pi 3 B+",
+    "hardware": "Raspberry Pi 4B 4GB",
     "steps": [
-      "SCRAPE: Fetch posts from 16 subreddits + 10 search queries via Reddit API",
-      "CLASSIFY: Claude Haiku extracts quotes, scores them (0-100)",
+      "SCRAPE: Fetch posts from 16 subreddits + 10 search queries via residential IP",
       "GUARD Layer 1: Content sanitizer — regex filters for URLs, PII, wallets, code, HTML, injection",
-      "GUARD Layer 2: AI verifier — separate Claude call confirms genuine misogyny, rejects satire/irony/incitement",
-      "FORCE ANONYMOUS: Strip all attribution, replace with 'Anonymous'",
-      "GENERATE: Create typographic SVG artwork, convert to PNG via Sharp",
-      "ANIMATE: Generate kinetic animation HTML (8 styles, weighted random)",
-      "UPLOAD: Pin artwork + metadata to IPFS via Pinata",
-      "MINT: ERC-721 on Base mainnet via Hardhat",
-      "LIST: List on marketplace with enforced royalty split",
-      "POST: Auto-post to Bluesky with artwork image",
-      "AUDIT: Self-review every N cycles, revoke low-quality mints"
+      "GUARD Layer 2: AI verifier — separate Haiku call confirms genuine misogyny, rejects satire / irony / incitement",
+      "FORCE ANONYMOUS: Strip all attribution",
+      "ROAST (Sonnet x3): Generate three roast candidates in parallel",
+      "PICK (Haiku): Choose a 'recommended' roast; operator sees all three in Telegram",
+      "APPROVE (Telegram): Operator picks 1/2/3 or regenerates (cap 3) or rejects. 72h expiry with 48h nag.",
+      "QUEUE: HMAC-sign {id, quote, roast} into the mint queue",
+      "MINT: CollectionAdmin.mint(uri, quote) via viem — token lands in SplitGuard directly",
+      "REGISTER: QuoteRegistry.registerQuote(tokenId, quote)",
+      "LIST: SplitGuard.listAuction(tokenId, price, duration) — splits are immutable in bytecode",
+      "CAPTURE: Puppeteer + ffmpeg renders the HTML to MP4 (Bluesky only)",
+      "POST: Bluesky video + PNG thumbnail",
+      "INDEX (every 5 min): Watch Rare Bazaar for Sold / AuctionSettled events on our collection",
+      "REDEEM (on sale): Load pre-approved roast from queue, generate glitch animation (hate → roast), update tokenURI + inscribe comeback on-chain, post MP4 + PNG to Bluesky"
     ]
   },
   "safety_guardrails": {
     "daily_mint_cap": 2,
-    "min_score_threshold": 90,
+    "max_per_cycle": 1,
+    "max_pending_approvals": 10,
+    "min_score_threshold": 80,
     "max_words_per_quote": 25,
     "forced_anonymous_attribution": true,
-    "hmac_queue_integrity": true,
-    "svg_to_png_sanitization": true,
-    "ipfs_only_image_urls": true,
-    "network_allowlist": ["base-mainnet", "base-sepolia"],
+    "hmac_queue_integrity": "MANDATORY — QUEUE_HMAC_SECRET env var, >=32 chars, no fallback. Covers {id, quote, roast}.",
+    "anthropic_daily_usd_cap": "ANTHROPIC_DAILY_USD_CAP env var, default $10 — aborts cycle on exceed",
+    "telegram_operator_approval": true,
+    "roast_regen_cap_per_quote": 3,
+    "approval_expiry_hours": 72,
+    "approval_nag_hours": 48,
+    "network_allowlist": ["mainnet", "sepolia"],
     "fail_closed_on_api_error": true,
-    "gas_balance_check_before_mint": true
+    "note_phase_4_defaults": "daily_mint_cap=2 and max_per_cycle=1 are the Phase 4 stabilization values (first 30 days). After soak, operator may crank to 12 and 3 respectively per spec §8 / §18."
   },
   "revenue_split": {
     "enforced_on_chain": true,
-    "contract": "0xBBb62EC107fd3D49A47cc9AbB2A7C2DeD1D3C6B4",
-    "splits": [
-      {"recipient": "Refuge UK (charity)", "share": "50%"},
-      {"recipient": "Artist", "share": "30%"},
-      {"recipient": "Project operations", "share": "20%"}
-    ]
+    "primary_splitter": {
+      "payees": ["CHARITY_ADDRESS", "ARTIST_ADDRESS", "PROJECT_ADDRESS"],
+      "shares": [50, 30, 20],
+      "note": "Addresses baked into splitter constructor — immutable after deploy. SplitGuard hardcodes [splitterAddress, 100] into bytecode so proceeds always route here."
+    },
+    "secondary_splitter": {
+      "payees": ["CHARITY_ADDRESS", "ARTIST_ADDRESS", "PROJECT_ADDRESS"],
+      "shares": [1, 1, 1],
+      "note": "Set as the EIP-2981 royalty receiver on the Rare collection. Receives 15% (or whatever Rare Bazaar enforces) on secondary sales."
+    }
   },
   "compute_budget": {
-    "anthropic_api_per_cycle": "$0.05",
-    "gas_per_mint": "~0.00002 ETH",
-    "monthly_cost": "~$5",
-    "rate_limiting": "Exponential backoff on Reddit 429s, max 3 retries"
+    "anthropic_per_cycle_estimate": "$0.05 — 3 Sonnet roasts + 1 Haiku picker + guard calls",
+    "gas_per_mint": "~0.00004 ETH at current Ethereum gas prices (combined CollectionAdmin.mint + QuoteRegistry.registerQuote + SplitGuard.listAuction)",
+    "monthly_cost_estimate": "~$5 at phase-4 cadence (2 approvals/day, not all minted)",
+    "rate_limiting": "Reddit: 1500ms delay + 3 retries with exponential backoff on 429"
   },
-  "contracts": {
+  "contracts_v6": {
+    "note": "Actual deployed addresses populated per-environment in .env. See docs/v6-spec.md §7 for architecture.",
+    "rare_collection": "RARE_CONTRACT_ADDRESS — deployed via `rare deploy erc721`, owned by CollectionAdmin after cutover",
+    "collection_admin": "COLLECTION_ADMIN_ADDRESS — wrapper around Rare collection. Hardcodes mint destination to SplitGuard. Owner = DEPLOYER_A.",
+    "quote_registry": "QUOTE_REGISTRY_ADDRESS — stores quoteOf + comebackOf on-chain. Owner = DEPLOYER_B.",
+    "primary_splitter": "PRIMARY_SPLITTER_ADDRESS — 50/30/20 payees immutable",
+    "secondary_splitter": "SECONDARY_SPLITTER_ADDRESS — 1/1/1 payees immutable; EIP-2981 receiver",
+    "split_guard": "SPLIT_GUARD_ADDRESS — immutable wrapper baking [primary_splitter, 100] into bytecode. emergencyWithdraw destination hardcoded to TREASURY."
+  },
+  "contracts_v3_legacy": {
+    "note": "V3 remains LIVE on Base mainnet. Do NOT touch until explicitly retired. V6 runs independently on Ethereum with no shared infra.",
     "base_mainnet": {
       "nft": "0x356Dd09E02960D59f1073F9d22A2634bbE3b1736",
       "marketplace": "0xaD60CFbD745CEBFaB39c47cf324e05088f366C1E",
