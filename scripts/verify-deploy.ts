@@ -61,6 +61,17 @@ async function main() {
 
   const failures: string[] = [];
 
+  // --- Quick sanity: primary and secondary splitter must not be the same address ---
+  if (lc(primarySplitterAddr) === lc(secondarySplitterAddr)) {
+    console.log(
+      `✗ PRIMARY_SPLITTER_ADDRESS == SECONDARY_SPLITTER_ADDRESS (${primarySplitterAddr}).\n` +
+        `   These must be two different contract instances.`
+    );
+    failures.push("primary != secondary splitter");
+  } else {
+    console.log(`✓ PRIMARY_SPLITTER_ADDRESS != SECONDARY_SPLITTER_ADDRESS`);
+  }
+
   function check(label: string, actual: string, expected: string) {
     const ok = lc(actual) === lc(expected);
     console.log(`${ok ? "✓" : "✗"} ${label}\n   expected: ${expected}\n   actual:   ${actual}`);

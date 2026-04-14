@@ -22,13 +22,19 @@ dotenv.config();
  * or directly on the Rare collection via Etherscan). That step is OUT of this script because
  * the collection's owner is the Rare CLI deployer, not us.
  *
- * Usage:
+ * RUN THIS FROM YOUR LAPTOP — NOT THE PI.
+ * DEPLOYER_A's private key should never touch the Pi's .env. Deploy from a
+ * separate clone on the operator's laptop where that key lives, then manually
+ * populate the Pi's .env with the bot key + the deployed addresses.
+ *
+ * Usage (from laptop):
  *   # Populate .env first with:
  *   #   PRIVATE_KEY=<DEPLOYER_A private key — NOT the bot key>
  *   #   RARE_CONTRACT_ADDRESS, BOT_ADDRESS, CHARITY/ARTIST/PROJECT_ADDRESS,
  *   #   DEPLOYER_A_ADDRESS, DEPLOYER_B_ADDRESS, TREASURY_ADDRESS
- *   npx hardhat run scripts/deploy-v6.ts --network sepolia
- *   npx hardhat run scripts/deploy-v6.ts --network mainnet
+ *   npx hardhat run scripts/deploy-v6.ts --network sepolia -- --dry-run   # preview
+ *   npx hardhat run scripts/deploy-v6.ts --network sepolia                # live
+ *   npx hardhat run scripts/deploy-v6.ts --network mainnet                # live
  */
 
 // Rare Protocol Bazaar addresses (per V6 spec §5.1)
@@ -53,9 +59,10 @@ function requireEnv(name: string): string {
 async function main() {
   const [deployer] = await ethers.getSigners();
   const balance = await ethers.provider.getBalance(deployer.address);
+  const DRY_RUN = process.argv.includes("--dry-run");
 
   console.log("=== MISOGYNY.EXE V6 — Deploy ===");
-  console.log(`Network:  ${network.name}`);
+  console.log(`Network:  ${network.name}${DRY_RUN ? " (DRY RUN — no txs will be sent)" : ""}`);
   console.log(`Deployer: ${deployer.address} (this MUST be DEPLOYER_A)`);
   console.log(`Balance:  ${ethers.formatEther(balance)} ETH`);
 
@@ -96,10 +103,16 @@ async function main() {
     }
   }
 
-  // Bazaar for this chain
-  const bazaarAddress = BAZAAR_ADDRESSES[network.name === "mainnet" ? "mainnet" : "sepolia"];
+  // Bazaar for this chain — STRICT lookup. Any unknown network (hardhat,
+  // localhost, anvil, mainnet-fork, etc.) fails loud. Prevents a silent bake
+  // of sepolia's Bazaar into a mainnet-fork SplitGuard deploy.
+  const bazaarAddress = BAZAAR_ADDRESSES[network.name];
   if (!bazaarAddress) {
-    console.error(`ERROR: No Rare Bazaar address known for network "${network.name}"`);
+    console.error(
+      `ERROR: No Rare Bazaar address known for network "${network.name}".\n` +
+        `Only "mainnet" and "sepolia" are supported. If you're on a local fork, ` +
+        `set the network name to "sepolia" or "mainnet" explicitly.`
+    );
     process.exit(1);
   }
 
@@ -113,6 +126,24 @@ async function main() {
   console.log(`  Charity: ${charity}`);
   console.log(`  Artist:  ${artist}`);
   console.log(`  Project: ${project}`);
+
+  if (DRY_RUN) {
+    console.log(`\n=== DRY RUN — no contracts deployed ===`);
+    console.log(`\nWould deploy in order:`);
+    console.log(`  1. MisogynyPaymentSplitter([charity, artist, project], [50, 30, 20])`);
+    console.log(`  2. MisogynyPaymentSplitter([charity, artist, project], [1, 1, 1])`);
+    console.log(`  3. SplitGuard(bazaar, collection, primarySplitter, COLDIE_AUCTION, ${deployerA}, ${treasury})`);
+    console.log(`  4. CollectionAdmin(collection, splitGuard)`);
+    console.log(`  5. QuoteRegistry()`);
+    console.log(`\nWould then call, in order, signed by ${deployer.address}:`);
+    console.log(`  CollectionAdmin.setWriter(${botAddress}, true)`);
+    console.log(`  SplitGuard.setWriter(${botAddress}, true)`);
+    console.log(`  CollectionAdmin.setRoyaltyReceiver(<secondarySplitter>)  — may fail if collection ownership not yet transferred`);
+    console.log(`  QuoteRegistry.setWriter(${botAddress}, true)`);
+    console.log(`  QuoteRegistry.transferOwnership(${deployerB})`);
+    console.log(`\nRe-run WITHOUT --dry-run to actually send transactions.`);
+    return;
+  }
 
   // --- 1. Primary splitter (50/30/20) ---
   console.log("\n[1/6] Deploying primary MisogynyPaymentSplitter (50/30/20)...");

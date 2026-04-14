@@ -22,10 +22,12 @@ MAILTO=""
 # Runs Chromium + ffmpeg. Scoped pkill reaps only its own zombies.
 5 */12 * * * pi flock -n /tmp/misogyny-mint.lock bash -c 'pkill -f "puppeteer.*rare-mint-v6" 2>/dev/null; cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/rare-mint-v6.ts >> logs/rare-mint-v6.log 2>&1'
 
-# V6 Indexer: every 5 min. Watches Rare Bazaar for Sold/AuctionSettled events.
-# No Chromium.
-*/5 * * * * pi flock -n /tmp/misogyny-indexer.lock bash -c 'cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/indexer-v6-eth.ts >> logs/indexer-v6-eth.log 2>&1'
+# V6 Indexer: every 5 min starting at minute 0. Watches Rare Bazaar for
+# Sold/AuctionSettled events. No Chromium.
+0-59/5 * * * * pi flock -n /tmp/misogyny-indexer.lock bash -c 'cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/indexer-v6-eth.ts >> logs/indexer-v6-eth.log 2>&1'
 
-# V6 Redemption: every 5 min. Runs Chromium ONLY when a new sale is detected.
-# Scoped pkill reaps only its own zombies.
-*/5 * * * * pi flock -n /tmp/misogyny-redemption.lock bash -c 'pkill -f "puppeteer.*redemption-v6" 2>/dev/null; cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/redemption-v6.ts --check >> logs/redemption-v6.log 2>&1'
+# V6 Redemption: every 5 min STAGGERED to minute 2 (2, 7, 12, ...) so the
+# indexer has time to write a fresh data/index-v6-eth.json before redemption
+# reads it. Runs Chromium ONLY when a new sale is detected. Scoped pkill
+# reaps only its own zombies.
+2-59/5 * * * * pi flock -n /tmp/misogyny-redemption.lock bash -c 'pkill -f "puppeteer.*redemption-v6" 2>/dev/null; cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/redemption-v6.ts --check >> logs/redemption-v6.log 2>&1'

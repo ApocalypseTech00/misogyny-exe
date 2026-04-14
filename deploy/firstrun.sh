@@ -23,7 +23,7 @@ echo "[1/7] Updating system + installing apt deps..."
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y \
   curl git build-essential \
-  chromium-browser ffmpeg \
+  chromium ffmpeg \
   logrotate
 
 # --- 2. Node.js 20 (arm64) ---
