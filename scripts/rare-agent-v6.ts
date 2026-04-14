@@ -181,6 +181,13 @@ async function callClaude(
 async function generateRoasts(quote: string): Promise<string[]> {
   log(`  generating 3 roast candidates (Sonnet)`);
   const userMsg = `Misogynistic quote: "${quote}"`;
+
+  // Gate for ALL THREE parallel calls upfront — avoids the race where 3
+  // `Promise.allSettled` children each pass their individual gate() but
+  // collectively overshoot the daily cap.
+  const estIn = Math.ceil((ROAST_PROMPT.length + userMsg.length) / 4);
+  spendCap.gate("claude-sonnet-4-6", estIn * 3, 80 * 3);
+
   const settled = await Promise.allSettled([
     callClaude(ROAST_PROMPT, userMsg, "claude-sonnet-4-6", 80),
     callClaude(ROAST_PROMPT, userMsg, "claude-sonnet-4-6", 80),
@@ -460,17 +467,20 @@ async function promoteNewCandidates(): Promise<{ promoted: number; blocked: numb
     return { promoted: 0, blocked: 0 };
   }
 
-  // Daily approval rate limit (approved or awaiting_approval today)
+  // Daily rate limit on NEW approval DMs. Resets at midnight UTC. If operator
+  // takes days to approve, old items stay "awaiting_approval" — counted in
+  // pendingCount (MAX_PENDING) above, not here. Here we only count approvals
+  // sent today to avoid flooding the operator's chat with more than N/day.
   const today = new Date().toISOString().slice(0, 10);
-  const approvedToday = queue.items.filter((i) =>
+  const promotedToday = queue.items.filter((i) =>
     i.approvalSentAt && i.approvalSentAt.slice(0, 10) === today
   ).length;
-  if (approvedToday >= DAILY_LIMIT) {
-    log(`  daily limit reached (${approvedToday}/${DAILY_LIMIT}) — skipping`);
+  if (promotedToday >= DAILY_LIMIT) {
+    log(`  daily approval-send limit reached (${promotedToday}/${DAILY_LIMIT}) — skipping`);
     return { promoted: 0, blocked: 0 };
   }
 
-  const slots = Math.min(MAX_PER_CYCLE, MAX_PENDING - pendingCount, DAILY_LIMIT - approvedToday);
+  const slots = Math.min(MAX_PER_CYCLE, MAX_PENDING - pendingCount, DAILY_LIMIT - promotedToday);
 
   const qualifying = candidatesFile.candidates
     .filter((c) => !c.approved && !c.rejected && !c.aiLegalRisk && c.score >= MIN_SCORE)

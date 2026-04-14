@@ -16,6 +16,14 @@ import path from "path";
 const API = "https://api.telegram.org";
 const POLL_STATE_PATH = path.join(__dirname, "..", "data", "telegram-poll-state.json");
 
+/** Scrub bot tokens + JWTs from any Telegram API response text before it hits a log or thrown Error. */
+function scrubTgSecrets(text: string): string {
+  return text
+    .replace(/bot\d+:[\w-]+/gi, "bot***:***")
+    .replace(/\d{6,}:[A-Za-z0-9_-]{30,}/g, "***:***")
+    .replace(/eyJ[\w.-]+/g, "JWT-***");
+}
+
 export interface InlineKeyboardButton {
   text: string;
   callback_data: string;
@@ -58,7 +66,7 @@ export async function sendMessage(text: string, opts: TgSendOptions = {}): Promi
   });
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new Error(`Telegram sendMessage failed (${res.status}): ${err.slice(0, 200)}`);
+    throw new Error(`Telegram sendMessage failed (${res.status}): ${scrubTgSecrets(err).slice(0, 200)}`);
   }
   const data = (await res.json()) as { ok: boolean; result: { message_id: number } };
   return data.result.message_id;
@@ -87,7 +95,7 @@ export async function editMessageText(
   });
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new Error(`Telegram editMessageText failed (${res.status}): ${err.slice(0, 200)}`);
+    throw new Error(`Telegram editMessageText failed (${res.status}): ${scrubTgSecrets(err).slice(0, 200)}`);
   }
 }
 
