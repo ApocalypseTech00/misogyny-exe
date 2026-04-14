@@ -1,0 +1,81 @@
+# MISOGYNY.EXE V6 — gitleaks config
+# Per V6 spec §14.1.
+#
+# Usage:
+#   brew install gitleaks
+#   gitleaks detect                       # full history scan
+#   gitleaks protect --staged             # pre-commit hook target
+#
+# Install pre-commit hook:
+#   echo '#!/bin/sh' > .git/hooks/pre-commit
+#   echo 'gitleaks protect --staged --redact' >> .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+
+title = "MISOGYNY.EXE gitleaks"
+
+# Use the default ruleset as a base (picks up AWS, GitHub, etc.).
+[extend]
+useDefault = true
+
+# Project-specific rules
+[[rules]]
+id = "eth-private-key"
+description = "Ethereum private key (64 hex chars)"
+regex = '''0x[a-fA-F0-9]{64}'''
+keywords = ["PRIVATE_KEY", "priv", "key"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key"
+regex = '''sk-ant-[A-Za-z0-9_-]{20,}'''
+keywords = ["sk-ant"]
+
+[[rules]]
+id = "jwt-token"
+description = "JSON Web Token (Pinata, Bluesky, etc.)"
+regex = '''eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'''
+keywords = ["eyJ"]
+
+[[rules]]
+id = "telegram-bot-token"
+description = "Telegram bot token"
+regex = '''\d{6,}:[A-Za-z0-9_-]{30,}'''
+keywords = ["TELEGRAM_BOT_TOKEN", "bot"]
+
+[[rules]]
+id = "queue-hmac-secret"
+description = "Queue HMAC secret declaration (inline)"
+regex = '''QUEUE_HMAC_SECRET\s*=\s*[A-Fa-f0-9]{32,}'''
+keywords = ["QUEUE_HMAC_SECRET"]
+
+[[rules]]
+id = "reddit-client-secret"
+description = "Reddit OAuth client secret"
+regex = '''REDDIT_CLIENT_SECRET\s*=\s*[A-Za-z0-9_-]{15,}'''
+keywords = ["REDDIT_CLIENT_SECRET"]
+
+[[rules]]
+id = "bluesky-app-password"
+description = "Bluesky app password (4-group format: xxxx-xxxx-xxxx-xxxx)"
+regex = '''BLUESKY_APP_PASSWORD\s*=\s*\w{4}-\w{4}-\w{4}-\w{4}'''
+keywords = ["BLUESKY_APP_PASSWORD"]
+
+[[rules]]
+id = "pinata-jwt-assignment"
+description = "Pinata JWT env assignment"
+regex = '''PINATA_JWT\s*=\s*eyJ'''
+keywords = ["PINATA_JWT"]
+
+# Allowlist: test fixtures + .env.example (template placeholders)
+[[allowlist.paths]]
+regex = '''\.env\.example$'''
+
+[[allowlist.paths]]
+regex = '''test/.*\.test\.(ts|js)$'''
+
+[[allowlist.paths]]
+regex = '''contracts/test/.*\.sol$'''
+
+# Allow the COLDIE_AUCTION constant (looks like a hex blob but is public bytecode)
+[[allowlist.regexes]]
+regex = '''0x434f4c4449455f41554354494f4e0+'''

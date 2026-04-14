@@ -1,0 +1,31 @@
+# MISOGYNY.EXE V6 — Cron jobs (Ethereum via Rare Protocol)
+# Installed to /etc/cron.d/misogyny-exe by firstrun.sh.
+# Per V6 spec §12.3.
+#
+# All jobs run as user `pi`, one-shot (exit after run), no persistent daemons.
+# flock prevents overlapping runs from corrupting shared state files.
+# Pre-cycle `pkill` is SCOPED to each script's own puppeteer tag so the
+# mint render and the redemption render never kill each other — the
+# scripts launch Puppeteer with --tag=rare-mint-v6 / --tag=redemption-v6
+# (see scripts/capture-mp4.ts) so the patterns below are unambiguous.
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+
+# V6 Agent: every 12h (scrape, guard, generate 3 roasts, TG approval send,
+# poll callbacks from prior cycles, nag/expire, Sunday digest)
+# No Chromium on this one.
+0 */12 * * * pi flock -n /tmp/misogyny-agent.lock bash -c 'cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/rare-agent-v6.ts >> logs/rare-agent-v6.log 2>&1'
+
+# V6 Mint: every 12h, 5 min after the agent. Processes approved queue items.
+# Runs Chromium + ffmpeg. Scoped pkill reaps only its own zombies.
+5 */12 * * * pi flock -n /tmp/misogyny-mint.lock bash -c 'pkill -f "puppeteer.*rare-mint-v6" 2>/dev/null; cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/rare-mint-v6.ts >> logs/rare-mint-v6.log 2>&1'
+
+# V6 Indexer: every 5 min. Watches Rare Bazaar for Sold/AuctionSettled events.
+# No Chromium.
+*/5 * * * * pi flock -n /tmp/misogyny-indexer.lock bash -c 'cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/indexer-v6-eth.ts >> logs/indexer-v6-eth.log 2>&1'
+
+# V6 Redemption: every 5 min. Runs Chromium ONLY when a new sale is detected.
+# Scoped pkill reaps only its own zombies.
+*/5 * * * * pi flock -n /tmp/misogyny-redemption.lock bash -c 'pkill -f "puppeteer.*redemption-v6" 2>/dev/null; cd /home/pi/misogyny-exe && set -a && source .env && set +a && npx ts-node scripts/redemption-v6.ts --check >> logs/redemption-v6.log 2>&1'
