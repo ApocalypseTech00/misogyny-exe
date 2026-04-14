@@ -133,20 +133,49 @@ export interface SeenFile {
 export interface QueueItem {
   id: number;
   quote: string;
+  /** V6: operator-approved roast, locked in at scrape time, fires at redemption */
+  roast?: string;
   attribution: string;
   source?: string;
   artworkPath: string;
   listPrice: string;
-  status: "pending" | "uploading" | "minting" | "listing" | "done" | "failed";
+  /**
+   * V6 lifecycle:
+   *   awaiting_approval → approved → uploading → minting → registering → listing → done
+   *   or → rejected / expired / failed
+   */
+  status:
+    | "awaiting_approval"
+    | "approved"
+    | "uploading"
+    | "minting"
+    | "registering"
+    | "listing"
+    | "done"
+    | "failed"
+    | "rejected"
+    | "expired"
+    // legacy V3 statuses preserved so old queues don't break the type
+    | "pending";
   tokenId?: number;
   imageCid?: string;
+  animationCid?: string;
   metadataCid?: string;
   mintTx?: string;
+  registerTx?: string;
   listTx?: string;
   error?: string;
   retries?: number;
   lastAttempt?: string;
-  hmac?: string; // Queue integrity HMAC
+  /** V6: TG message id tied to this approval thread */
+  approvalMessageId?: number;
+  /** V6: how many regen rounds this candidate has used (cap: 3) */
+  regenCount?: number;
+  /** V6: ISO timestamp when TG approval was sent (for 48h nag + 72h expiry) */
+  approvalSentAt?: string;
+  /** V6: ISO timestamp when operator approved */
+  approvedAt?: string;
+  hmac?: string; // Queue integrity HMAC covers {id, quote, roast}
 }
 
 export interface Queue {
@@ -180,10 +209,17 @@ export function hashQuote(text: string): string {
 }
 
 // HMAC for queue integrity (prevents local file tampering)
-const QUEUE_HMAC_KEY = process.env.QUEUE_HMAC_SECRET || process.env.PRIVATE_KEY || "misogyny-exe-queue-integrity";
-export function computeQueueHmac(item: { id: number; quote: string }): string {
+// V6 spec §11.3 / §14.4: MANDATORY env var, no fallbacks. Bot aborts on missing/short secret.
+const QUEUE_HMAC_KEY = process.env.QUEUE_HMAC_SECRET || "";
+if (QUEUE_HMAC_KEY.length < 32) {
+  throw new Error(
+    "QUEUE_HMAC_SECRET must be set to at least 32 chars. Generate: openssl rand -hex 32"
+  );
+}
+// HMAC covers {id, quote, roast} per V6 spec §14.4 — tampering with either invalidates the signature
+export function computeQueueHmac(item: { id: number; quote: string; roast?: string }): string {
   return crypto.createHmac("sha256", QUEUE_HMAC_KEY)
-    .update(`${item.id}:${item.quote}`)
+    .update(`${item.id}:${item.quote}:${item.roast ?? ""}`)
     .digest("hex")
     .slice(0, 32);
 }

@@ -18,17 +18,25 @@ import sharp from "sharp";
  */
 
 const SIZE = 1000;
-const BG_COLOR = "#0a0a0a";      // Black background — the hate
-const TEXT_COLOR = "#F918D0";    // Hot pink text
 const PADDING = 60; // px from edges
 const MAX_TEXT_WIDTH = SIZE - PADDING * 2;
+
+// V6 spec §10.1 / §10.2 palettes.
+const PALETTES = {
+  hate: { bg: "#0a0a0a", text: "#F918D0" }, // near-black bg, hot pink text
+  redeemed: { bg: "#F918D0", text: "#0a0a0a" }, // inverted
+} as const;
+
+export type Palette = keyof typeof PALETTES;
 
 interface ArtworkOpts {
   id: number;
   quote: string;
   attribution: string;
   outputDir?: string;
-  lineBreaks?: string[]; // pre-computed line breaks from Claude
+  lineBreaks?: string[]; // pre-computed line breaks
+  /** V6: "hate" for mints, "redeemed" for redemption (inverted palette + REDEEMED glyph) */
+  palette?: Palette;
 }
 
 // Font size tiers based on word count
@@ -136,6 +144,7 @@ function getFontBase64(): string {
  * Generate the artwork SVG string.
  */
 function buildSvg(opts: ArtworkOpts): string {
+  const palette = PALETTES[opts.palette ?? "hate"];
   const quote = opts.quote.toUpperCase();
   const words = quote.split(/\s+/);
   const wordCount = words.length;
@@ -173,7 +182,7 @@ function buildSvg(opts: ArtworkOpts): string {
 
     const y = startY + i * lineHeight;
     textElements.push(
-      `  <text x="500" y="${y}" text-anchor="middle" font-family="CMU Serif, Georgia, serif" font-size="${fontSize}" font-weight="900" font-style="italic" fill="${TEXT_COLOR}">${lineText}</text>`
+      `  <text x="500" y="${y}" text-anchor="middle" font-family="CMU Serif, Georgia, serif" font-size="${fontSize}" font-weight="900" font-style="italic" fill="${palette.text}">${lineText}</text>`
     );
   }
 
@@ -191,11 +200,19 @@ function buildSvg(opts: ArtworkOpts): string {
     </style>`
     : "";
 
+  // V6 spec §10.2: bake a small "REDEEMED" glyph into the redeemed PNG so wallet
+  // thumbnails and Bluesky previews telegraph the transformation even statically.
+  const redeemedGlyph =
+    opts.palette === "redeemed"
+      ? `  <text x="500" y="${SIZE - 40}" text-anchor="middle" font-family="CMU Serif, Georgia, serif" font-size="22" font-weight="700" font-style="italic" fill="${palette.text}" opacity="0.7" letter-spacing="4">REDEEMED</text>`
+      : "";
+
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">
   <defs>${fontFace}
   </defs>
-  <rect width="${SIZE}" height="${SIZE}" fill="${BG_COLOR}"/>
+  <rect width="${SIZE}" height="${SIZE}" fill="${palette.bg}"/>
 ${textElements.join("\n")}
+${redeemedGlyph}
 </svg>`;
 }
 

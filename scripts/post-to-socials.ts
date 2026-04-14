@@ -45,6 +45,10 @@ export interface PostPayload {
   tokenId: number;
   imageCid?: string;
   artworkPath?: string;
+  /** V6: MP4 file for Bluesky video post. If set, Bluesky posts as video instead of image. */
+  mp4Path?: string;
+  /** V6: optional custom text (e.g. redemption "ROAST: ..." format). Falls back to default mint text. */
+  customText?: string;
 }
 
 export interface PostResult {
@@ -102,6 +106,10 @@ function isValidCid(cid: string): boolean {
 
 /** Build the post text shared across all platforms */
 export function buildPostText(payload: PostPayload): string {
+  if (payload.customText) {
+    // Caller supplied full text (e.g. redemption flow with ROAST: prefix). Sanitize + pass through.
+    return sanitizeForPost(payload.customText).slice(0, 300);
+  }
   const quote = sanitizeForPost(payload.quote);
   // Bluesky limit is 300 graphemes. Reserve ~80 chars for metadata lines.
   const maxQuoteLen = 220;
@@ -114,6 +122,78 @@ export function buildPostText(payload: PostPayload): string {
     `MISOGYNY.EXE #${payload.tokenId}`,
     `${MARKETPLACE_BASE_URL}#token-${payload.tokenId}`,
   ].join("\n");
+}
+
+// ============================================================
+// Bluesky video upload (AT Protocol) — ported from V3 capture-and-post-videos.ts
+// ============================================================
+
+async function resolvePdsEndpoint(did: string): Promise<string> {
+  const res = await fetchWithTimeout(`https://plc.directory/${did}`, { method: "GET" });
+  if (!res.ok) throw new Error(`Failed to resolve DID: ${res.status}`);
+  const plcDoc = (await res.json()) as any;
+  const pds = plcDoc.service?.find((s: any) => s.id === "#atproto_pds")?.serviceEndpoint;
+  if (!pds) throw new Error("No PDS endpoint found in DID document");
+  return pds;
+}
+
+async function uploadVideoToBluesky(
+  videoPath: string,
+  accessJwt: string,
+  did: string
+): Promise<any> {
+  const pdsEndpoint = await resolvePdsEndpoint(did);
+  const pdsDid = `did:web:${new URL(pdsEndpoint).hostname}`;
+
+  const serviceAuthRes = await fetchWithTimeout(
+    `${pdsEndpoint}/xrpc/com.atproto.server.getServiceAuth?aud=${encodeURIComponent(pdsDid)}&lxm=com.atproto.repo.uploadBlob`,
+    { headers: { Authorization: `Bearer ${accessJwt}` } }
+  );
+  if (!serviceAuthRes.ok) {
+    throw new Error(`Service auth failed: ${serviceAuthRes.status}`);
+  }
+  const { token: serviceToken } = (await serviceAuthRes.json()) as any;
+
+  const videoData = fs.readFileSync(videoPath);
+  const fileName = path.basename(videoPath);
+
+  const uploadRes = await fetchWithTimeout(
+    `https://video.bsky.app/xrpc/app.bsky.video.uploadVideo?did=${encodeURIComponent(did)}&name=${encodeURIComponent(fileName)}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        "Content-Type": "video/mp4",
+      },
+      body: new Uint8Array(videoData),
+    }
+  );
+  if (!uploadRes.ok) {
+    throw new Error(`Video upload failed: ${uploadRes.status}`);
+  }
+  const jobStatus = (await uploadRes.json()) as any;
+
+  // Poll for processing completion (max ~2 min)
+  const maxWaitMs = 120_000;
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const statusRes = await fetchWithTimeout(
+      `https://video.bsky.app/xrpc/app.bsky.video.getJobStatus?jobId=${jobStatus.jobId}`,
+      { headers: { Authorization: `Bearer ${serviceToken}` } }
+    );
+    if (!statusRes.ok) {
+      await new Promise((r) => setTimeout(r, 2000));
+      continue;
+    }
+    const status = (await statusRes.json()) as any;
+    const state = status.jobStatus?.state;
+    if (state === "JOB_STATE_COMPLETED") return status.jobStatus.blob;
+    if (state === "JOB_STATE_FAILED") {
+      throw new Error(`Video processing failed: ${JSON.stringify(status.jobStatus.error)}`);
+    }
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  throw new Error("Video processing timed out");
 }
 
 /** Fetch with AbortController timeout */
@@ -212,7 +292,17 @@ async function postToBluesky(payload: PostPayload): Promise<PostResult> {
 
     const { accessJwt, did } = (await authRes.json()) as any;
 
-    // 2. Upload image (best-effort — post succeeds without it)
+    // 2a. Upload MP4 if provided — V6 redemption / mint flow posts video (not image)
+    let videoBlob: any = null;
+    if (payload.mp4Path && fs.existsSync(payload.mp4Path)) {
+      try {
+        videoBlob = await uploadVideoToBluesky(payload.mp4Path, accessJwt, did);
+      } catch (err: any) {
+        // fall through — post as image
+      }
+    }
+
+    // 2b. Upload image (best-effort — post succeeds without it)
     let imageBlob: any = null;
 
     if (payload.imageCid) {
@@ -273,7 +363,17 @@ async function postToBluesky(payload: PostPayload): Promise<PostResult> {
       createdAt: new Date().toISOString(),
     };
 
-    if (imageBlob) {
+    if (videoBlob) {
+      // V6: video post with PNG thumbnail
+      record.embed = {
+        $type: "app.bsky.embed.video",
+        video: videoBlob,
+        alt: `MISOGYNY.EXE #${payload.tokenId} — animated typographic artwork`,
+      };
+      if (imageBlob) {
+        record.embed.thumb = imageBlob;
+      }
+    } else if (imageBlob) {
       record.embed = {
         $type: "app.bsky.embed.images",
         images: [
