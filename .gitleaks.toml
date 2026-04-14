@@ -20,9 +20,11 @@ useDefault = true
 # Project-specific rules
 [[rules]]
 id = "eth-private-key"
-description = "Ethereum private key (64 hex chars)"
-regex = '''0x[a-fA-F0-9]{64}'''
-keywords = ["PRIVATE_KEY", "priv", "key"]
+description = "Ethereum private key (64 hex) in an env-var-ish assignment"
+# Tightened to require a key= context so plain tx hashes and bytecode constants
+# don't false-positive across the repo.
+regex = '''(?i)(PRIVATE_KEY|priv_key|priv-key|privatekey|deployer[_-]?key)\s*[:=]\s*"?0x[a-fA-F0-9]{64}"?'''
+keywords = ["PRIVATE_KEY", "priv_key", "privatekey"]
 
 [[rules]]
 id = "anthropic-api-key"

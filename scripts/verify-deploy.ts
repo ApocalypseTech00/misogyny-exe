@@ -131,10 +131,13 @@ async function main() {
   checkNum("Secondary splitter.totalShares == 3", await secondarySplitter.totalShares(), 3n);
 
   // --- Rare collection ownership + royalty receiver ---
-  // These checks hit the live Rare collection — best-effort, the interface is owner-only
-  // and setRoyaltyReceiver, both of which are Ownable.
+  // These checks hit the live Rare collection — best-effort, both `owner()` and
+  // `royaltyInfo(uint256, uint256)` are standard (Ownable + EIP-2981).
   const rareLike = await ethers.getContractAt(
-    ["function owner() view returns (address)"],
+    [
+      "function owner() view returns (address)",
+      "function royaltyInfo(uint256 tokenId, uint256 salePrice) view returns (address receiver, uint256 royaltyAmount)",
+    ],
     rareAddress
   );
   try {
@@ -143,6 +146,24 @@ async function main() {
   } catch (err: any) {
     console.log(`? Rare collection.owner() read failed (may be a different ABI): ${err.message?.slice(0, 100)}`);
     failures.push("Rare collection owner check");
+  }
+
+  // EIP-2981 secondary royalty recipient must route to the secondary splitter.
+  // deploy-v6.ts allows setRoyaltyReceiver to fail silently (collection ownership
+  // must be transferred to CollectionAdmin first), so this is the ONLY gate.
+  try {
+    const [royaltyReceiver] = await rareLike.royaltyInfo(1n, 10000n);
+    check(
+      "Rare collection.royaltyInfo receiver == Secondary splitter",
+      royaltyReceiver,
+      secondarySplitterAddr
+    );
+  } catch (err: any) {
+    console.log(`✗ Rare collection.royaltyInfo read failed: ${err.message?.slice(0, 120)}`);
+    console.log(`   If the Rare collection doesn't support EIP-2981 royaltyInfo, call`);
+    console.log(`   CollectionAdmin.setRoyaltyReceiver(${secondarySplitterAddr}) manually`);
+    console.log(`   and confirm via Etherscan that the collection's royalty config is updated.`);
+    failures.push("Rare collection royaltyInfo check");
   }
 
   // --- Final verdict ---
