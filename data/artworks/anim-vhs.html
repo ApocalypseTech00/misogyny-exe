@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #1a1a1a; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%); pointer-events: none; z-index: 20; }
+  .scanlines { position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0, transparent 2px, rgba(0,0,0,0.28) 2px, rgba(0,0,0,0.28) 3px); pointer-events: none; z-index: 15; mix-blend-mode: multiply; }
+  .tracking { position: absolute; left: 0; right: 0; height: 14vmin; background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.08) 60%, transparent 100%); pointer-events: none; z-index: 18; animation: roll 5.5s linear infinite; filter: blur(1px); }
+  @keyframes roll { 0% { top: -20vmin; } 100% { top: 110vmin; } }
+  .noise { position: absolute; inset: 0; pointer-events: none; z-index: 17; opacity: 0.18; mix-blend-mode: screen; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>"); animation: noiseshift 0.4s steps(4) infinite; }
+  @keyframes noiseshift { 0% { transform: translate(0,0); } 25% { transform: translate(-6px,4px); } 50% { transform: translate(5px,-3px); } 75% { transform: translate(-2px,-5px); } 100% { transform: translate(0,0); } }
+  .jitter { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; animation: tapeJitter 3.1s ease-in-out infinite; z-index: 5; }
+  @keyframes tapeJitter {
+    0%, 88%, 100% { transform: translate(0,0) skewX(0deg); }
+    90% { transform: translate(-3vmin, 0) skewX(-2deg); }
+    92% { transform: translate(2vmin, 0) skewX(1.5deg); }
+    94% { transform: translate(-1vmin, 0) skewX(0deg); }
+  }
+  .quote { position: relative; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; color: #F918D0; text-shadow: 0 0 12px #F918D0aa, 0 0 26px #F918D055; padding: 0 5vmin; }
+  .quote::before, .quote::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; text-align: center; padding: 0 5vmin; pointer-events: none; mix-blend-mode: screen; }
+  .quote::before { color: #ff2d8b; transform: translate(-2px, 0); animation: chromaR 1.7s steps(6) infinite; }
+  .quote::after { color: #2de0ff; transform: translate(2px, 0); animation: chromaB 1.9s steps(6) infinite; }
+  @keyframes chromaR { 0%,100% { transform: translate(-2px,0); } 50% { transform: translate(-5px,0); } }
+  @keyframes chromaB { 0%,100% { transform: translate(2px,0); } 50% { transform: translate(5px,0); } }
+  .line { display: block; }
+  .timecode { position: absolute; top: 16px; right: 16px; font-family: 'Courier New', monospace; font-style: normal; font-weight: 700; font-size: 12px; color: #ffffffcc; text-shadow: 0 0 6px #0008; letter-spacing: 0.1em; z-index: 19; }
+  .rec { position: absolute; top: 16px; left: 16px; font-family: 'Courier New', monospace; font-style: normal; font-weight: 700; font-size: 12px; color: #ff3333; letter-spacing: 0.2em; z-index: 19; display: flex; align-items: center; gap: 6px; }
+  .rec .dot { width: 8px; height: 8px; background: #ff3333; border-radius: 50%; animation: rec 1s ease-in-out infinite; }
+  @keyframes rec { 0%, 60% { opacity: 1; } 80%, 100% { opacity: 0.1; } }
+</style></head><body>
+<div class="container">
+  <div class="rec"><span class="dot"></span>REC</div>
+  <div class="timecode" id="tc">00:00:00</div>
+  <div class="jitter">
+    <div id="quoteWrap"></div>
+  </div>
+  <div class="noise"></div>
+  <div class="scanlines"></div>
+  <div class="tracking"></div>
+  <div class="vignette"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+
+const LINES_CONFIG = { 4:{wpl:1,size:13}, 10:{wpl:3,size:6.5}, 15:{wpl:3,size:5.5}, 25:{wpl:4,size:4.8} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quote = QUOTES[0].toUpperCase();
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+const wrap = document.getElementById('quoteWrap');
+const quoteDiv = document.createElement('div');
+quoteDiv.className = 'quote';
+quoteDiv.setAttribute('data-text', lines.join(' '));
+quoteDiv.style.fontSize = config.size + 'vmin';
+quoteDiv.style.lineHeight = '1.3';
+lines.forEach(line => {
+  const s = document.createElement('span');
+  s.className = 'line';
+  s.textContent = line;
+  quoteDiv.appendChild(s);
+});
+wrap.appendChild(quoteDiv);
+
+// Fake timecode that ticks like tape
+const tc = document.getElementById('tc');
+let frames = 0;
+setInterval(() => {
+  frames++;
+  const s = Math.floor(frames / 30);
+  const f = frames % 30;
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  const ff = String(f).padStart(2, '0');
+  tc.textContent = `${mm}:${ss}:${ff}`;
+}, 33);
+</script></body></html>

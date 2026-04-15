@@ -9,25 +9,52 @@ import fs from "fs";
  *   - medium  (9 words)
  *   - long    (20 words)
  * Hate palette only (palette swap on templates is a separate fix).
+ *
+ * SKIP_LENGTHS — per-style length kills, applied from operator feedback.
  */
 async function main() {
   const dir = path.join(__dirname, "..", "data", "samples");
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true });
   fs.mkdirSync(dir, { recursive: true });
 
-  const lengths = {
+  const lengths: Record<"punchy" | "medium" | "long", string> = {
     punchy: "women aren't human",
     medium: "modern dating is impossible because women have unrealistic standards",
     long: "women are inherently inferior because they let their feelings make decisions instead of using logic and reason like real adults",
   };
+  const LABELS: Array<"punchy" | "medium" | "long"> = ["punchy", "medium", "long"];
 
-  const styles = ["scramble", "typewriter", "redacted", "flicker", "corruption", "stamp", "echo", "morse", "interactive", "ripple", "liquid", "kinetic", "scan", "magnetism", "heat", "chromatic", "goo", "moire", "halftone", "feedback", "voronoi"] as const;
+  const styles = [
+    "scramble", "typewriter", "redacted", "flicker", "corruption",
+    "stamp", "echo", "morse", "interactive", "ripple",
+    "liquid", "kinetic", "scan", "magnetism", "heat",
+    "chromatic", "goo", "moire", "halftone", "voronoi",
+    "vhs", "erosion", "slot",
+    "shatter", "cathode", "burn", "pixelate", "xerox", "shake",
+    "terminal", "3dflip",
+  ] as const;
 
+  const SKIP_LENGTHS: Record<string, Array<"punchy" | "medium" | "long">> = {
+    corruption: ["long"],
+    moire: ["long"],
+    chromatic: ["medium", "long"],
+    magnetism: ["medium", "long"],
+    kinetic: ["long"],
+    vhs: ["medium", "long"],
+    xerox: ["long"],
+    burn: ["long"],
+  };
+
+  // First pass: render everything kept, tracking per-style which labels we rendered.
   let id = 1;
+  const rendered: Record<string, Array<{ label: string; id: number }>> = {};
   for (const style of styles) {
-    for (const [lenName, quote] of Object.entries(lengths)) {
+    rendered[style] = [];
+    for (const label of LABELS) {
+      if (SKIP_LENGTHS[style]?.includes(label)) continue;
+      const quote = lengths[label];
       const sampleId = id++;
-      console.log(`[${sampleId}] ${style.padEnd(11)} ${lenName.padEnd(6)} — "${quote.slice(0, 50)}${quote.length > 50 ? '...' : ''}"`);
+      console.log(`[${sampleId}] ${style.padEnd(11)} ${label.padEnd(6)} — "${quote.slice(0, 50)}${quote.length > 50 ? '...' : ''}"`);
       const svgPath = generateArtwork({
         id: sampleId,
         quote,
@@ -43,11 +70,11 @@ async function main() {
         palette: "hate",
         outputDir: dir,
       });
+      rendered[style].push({ label, id: sampleId });
     }
   }
 
-  // Auto-generate index.html so the showcase stays in sync with the styles array.
-  const labels = ["punchy", "medium", "long"];
+  // Second pass: build index.html that only references rendered cells.
   let html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>MISOGYNY.EXE — animation showcase</title>
 <style>
@@ -61,14 +88,14 @@ async function main() {
   .header-meta { opacity: 0.5; font-size: 11px; }
 </style></head><body>
 <h1>MISOGYNY.EXE — animation showcase</h1>
-<div class="header-meta">${styles.length} styles × 3 quote lengths (punchy / medium / long). Hate palette only.</div>
+<div class="header-meta">${styles.length} styles, operator-kill-list applied. Hate palette only.</div>
 `;
-  let n = 1;
   for (const style of styles) {
+    const cells = rendered[style];
+    if (!cells.length) continue;
     html += `<h2>${style}</h2>\n<div class="row">\n`;
-    for (let i = 0; i < 3; i++) {
-      html += `  <div class="cell"><div class="meta">${n} — ${labels[i]}</div><iframe src="${n}-${style}.html"></iframe></div>\n`;
-      n++;
+    for (const { label, id: cellId } of cells) {
+      html += `  <div class="cell"><div class="meta">${cellId} — ${label}</div><iframe src="${cellId}-${style}.html"></iframe></div>\n`;
     }
     html += `</div>\n\n`;
   }

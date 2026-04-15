@@ -37,8 +37,18 @@ const ANIMATION_STYLES = [
   "goo",
   "moire",
   "halftone",
-  "feedback",
   "voronoi",
+  "vhs",
+  "erosion",
+  "slot",
+  "shatter",
+  "cathode",
+  "burn",
+  "pixelate",
+  "xerox",
+  "shake",
+  "terminal",
+  "3dflip",
 ] as const;
 
 type AnimationStyle = (typeof ANIMATION_STYLES)[number];
@@ -64,8 +74,18 @@ const STYLE_WEIGHTS: Record<AnimationStyle, number> = {
   goo: 5,
   moire: 5,
   halftone: 5,
-  feedback: 5,
   voronoi: 5,
+  vhs: 6,
+  erosion: 6,
+  slot: 6,
+  shatter: 6,
+  cathode: 6,
+  burn: 6,
+  pixelate: 6,
+  xerox: 5,
+  shake: 5,
+  terminal: 6,
+  "3dflip": 6,
 };
 
 /**

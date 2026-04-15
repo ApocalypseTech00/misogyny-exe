@@ -64,7 +64,19 @@ document.addEventListener('mousemove', (e) => {
   realMouse = true; lastMouseMs = performance.now();
 });
 
+// Click to toggle the effect. Starts ACTIVE; first click snaps letters back to
+// normal, next click resumes the magnetic attract.
+let enabled = true;
+document.addEventListener('click', () => {
+  enabled = !enabled;
+  if (!enabled) {
+    chars.forEach(c => { c.el.style.transform = 'translate(0,0)'; });
+  }
+});
+
 function tick(t) {
+  if (!enabled) { requestAnimationFrame(tick); return; }
+
   if (!realMouse || t - lastMouseMs > 800) {
     realMouse = false;
     const angle = t / 1400;

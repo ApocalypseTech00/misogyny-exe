@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', monospace; font-weight: 700; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: flex-start; justify-content: flex-start; flex-direction: column; padding: 4vmin 5vmin; background: #0a0a0a; overflow: hidden; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.18) 1px, rgba(0,0,0,0.18) 3px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  .term { font-size: 1.75vmin; color: #F918D0; text-shadow: 0 0 6px #F918D088; letter-spacing: 0.02em; line-height: 1.45; z-index: 3; width: 100%; }
+  .hdr { color: #F918D088; margin-bottom: 0.9vmin; font-size: 1.55vmin; }
+  .prompt { color: #F918D0; }
+  .dim { color: #F918D070; }
+  .ok { color: #7affd9; }
+  .warn { color: #ff3a8e; }
+  .hash { color: #F918D0; letter-spacing: 0; }
+  .sol { color: #F918D088; font-size: 1.55vmin; margin: 0.8vmin 0 0.8vmin 2vmin; padding-left: 1.6vmin; border-left: 0.2vmin solid #F918D044; white-space: pre; }
+  .sol .kw { color: #ff3a8e; }
+  .sol .fn { color: #7affd9; }
+  .sol .str { color: #F918D0; }
+  .row { min-height: 1em; }
+  .quote { color: #F918D0; text-shadow: 0 0 10px #F918D0cc, 0 0 22px #F918D055; font-family: Georgia, serif; font-style: italic; font-weight: 900; text-transform: uppercase; margin: 1.4vmin 0 1.4vmin 2vmin; line-height: 1.22; letter-spacing: 0.04em; border-left: 0.35vmin solid #F918D0aa; padding-left: 2vmin; max-width: 84vmin; }
+  .cursor { display: inline-block; width: 0.5em; height: 1em; background: #F918D0; vertical-align: text-bottom; box-shadow: 0 0 6px #F918D0aa; animation: blink 0.6s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <div class="term">
+    <div class="hdr">MISOGYNY.EXE V6 // pi@judie-2 // sepolia 11155111 // rare-protocol</div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c1"></span></div>
+    <div class="row dim" id="o1"></div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c2"></span></div>
+    <div class="row dim" id="o2"></div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c3"></span></div>
+    <div class="row dim" id="o3"></div>
+    <div class="quote" id="q"></div>
+    <div class="sol" id="sol"></div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c4"></span></div>
+    <div class="row dim" id="o4"></div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c5"></span></div>
+    <div class="row dim" id="o5"></div>
+    <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="cmd"></span><span class="cursor"></span></div>
+  </div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:11}, 10:{wpl:3,size:5.5}, 15:{wpl:3,size:4.6}, 25:{wpl:3,size:3.7} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+const quote = QUOTES[0].toUpperCase();
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+const q = document.getElementById('q');
+q.style.fontSize = config.size + 'vmin';
+lines.forEach(l => { const d = document.createElement('div'); d.textContent = l; q.appendChild(d); });
+
+// Deterministic tokenId + tx from quote hash (so re-render keeps the same "mint")
+function hash32(s) { let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
+function hexPad(n, len) { let s = n.toString(16); while (s.length < len) s = '0' + s; return s.slice(0, len); }
+const qh = hash32(quote);
+const tokenId = (qh % 4096) + 1;
+const txHash = '0x' + hexPad(qh, 8) + hexPad(qh * 7 >>> 0, 8) + hexPad(qh * 13 >>> 0, 8) + hexPad(qh * 19 >>> 0, 8) + hexPad(qh * 23 >>> 0, 8) + hexPad(qh * 29 >>> 0, 8) + hexPad(qh * 31 >>> 0, 8) + hexPad(qh * 37 >>> 0, 8);
+const shortTx = txHash.slice(0, 10) + '…' + txHash.slice(-4);
+
+const PRE = [
+  { c: 'c1', o: 'o1', cmd: './rare-agent-v6 --scrape reddit --sub=mgtow --limit=1',
+    out: '[scrape] 1 candidate · HMAC=' + hexPad(qh * 41 >>> 0, 8) + '… · score=0.92' },
+  { c: 'c2', o: 'o2', cmd: 'guard --layer=sanitize+ai --model=claude-haiku-4-5',
+    out: '[guard]  PASS · toxicity=0.94 misogyny=0.89 threshold=0.80' },
+  { c: 'c3', o: 'o3', cmd: 'cat /tmp/quote.in',
+    out: '' },
+];
+
+const SOLIDITY =
+`<span class="kw">function</span> <span class="fn">mint</span>(<span class="kw">string</span> calldata uri, <span class="kw">string</span> calldata quote)
+    external onlyWriter <span class="kw">returns</span> (<span class="kw">uint256</span> tokenId)
+{
+    tokenId = collection.mint(SPLIT_GUARD, uri);
+    <span class="kw">emit</span> MintRouted(tokenId, uri, quote);
+}`;
+
+const POST = [
+  { c: 'c4', o: 'o4',
+    cmd: 'rare-mint-v6 --cast=CollectionAdmin.mint --to=0x68B6…4b48',
+    out: '[rare]   tx ' + shortTx + ' · ✓ mined blk#' + ((qh % 900000) + 6100000) + ' · tokenId=' + tokenId },
+  { c: 'c5', o: 'o5',
+    cmd: 'QuoteRegistry.registerQuote(' + tokenId + ', quote) · SplitGuard.listAuction(' + tokenId + ', 0.01 ETH, 24h)',
+    out: '[splits] 50% Refuge 0x092C…A9B9 · 30% artist 0x5C35…2deF · 20% project 0xAC57…0072' },
+];
+
+const LOOP = [
+  'npm run verify:v6:testnet',
+  'tail -f logs/rare-agent-v6.log',
+  'cast call 0xe643…0344 "quoteOf(uint256)(string)" ' + tokenId,
+  'tg send @apocalypsetech "minted #' + tokenId + ' → ' + shortTx + '"',
+];
+
+function typeText(target, text, speed, done) {
+  let i = 0; target.textContent = '';
+  (function step(){
+    if (i >= text.length) { done && done(); return; }
+    target.textContent += text[i++];
+    setTimeout(step, speed + Math.random() * 18);
+  })();
+}
+
+function runSeq(list, i, done) {
+  if (i >= list.length) { done && done(); return; }
+  const s = list[i];
+  typeText(document.getElementById(s.c), s.cmd, 20, () => {
+    setTimeout(() => { document.getElementById(s.o).textContent = s.out; setTimeout(() => runSeq(list, i + 1, done), 320); }, 220);
+  });
+}
+
+const sol = document.getElementById('sol');
+const cmdEl = document.getElementById('cmd');
+
+function reveal(target, html, speed, done) {
+  const plain = html.replace(/<[^>]+>/g, '');
+  let i = 0; target.innerHTML = '';
+  (function step(){
+    if (i >= plain.length) { target.innerHTML = html; done && done(); return; }
+    i++;
+    // Re-render with partial plain text, but keep full markup once complete.
+    target.textContent = plain.slice(0, i);
+    setTimeout(step, speed);
+  })();
+}
+
+function clearAll() {
+  ['c1','c2','c3','c4','c5','o1','o2','o3','o4','o5'].forEach(id => document.getElementById(id).textContent = '');
+  sol.innerHTML = ''; cmdEl.textContent = '';
+}
+
+function loopFinal(n, done) {
+  if (n >= 3) { done && done(); return; }
+  const pick = LOOP[n % LOOP.length];
+  typeText(cmdEl, pick, 30, () => { setTimeout(() => { cmdEl.textContent = ''; loopFinal(n + 1, done); }, 700); });
+}
+
+function run() {
+  clearAll();
+  runSeq(PRE, 0, () => {
+    setTimeout(() => {
+      reveal(sol, SOLIDITY, 10, () => {
+        setTimeout(() => runSeq(POST, 0, () => {
+          setTimeout(() => loopFinal(0, () => setTimeout(run, 1400)), 600);
+        }), 400);
+      });
+    }, 450);
+  });
+}
+run();
+</script></body></html>

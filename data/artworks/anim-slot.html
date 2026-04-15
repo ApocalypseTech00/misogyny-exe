@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  #quote { position: relative; z-index: 6; text-align: center; padding: 0 4vmin; }
+  .line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; white-space: nowrap; }
+  .reel {
+    display: inline-block; overflow: hidden; vertical-align: top;
+    height: 1.2em; line-height: 1.2em;
+  }
+  .reel .strip {
+    display: flex; flex-direction: column; align-items: center;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reel .strip > span { display: block; height: 1.2em; line-height: 1.2em; }
+  .space { display: inline-block; width: 0.4em; }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="quote"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+const quote = QUOTES[0].toUpperCase();
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*0123456789';
+const quoteEl = document.getElementById('quote');
+const reels = []; // { strip, targetIndex }
+
+lines.forEach((line, li) => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  for (const c of line) {
+    if (c === ' ') {
+      const sp = document.createElement('span');
+      sp.className = 'space';
+      lineEl.appendChild(sp);
+      continue;
+    }
+    const wrap = document.createElement('span');
+    wrap.className = 'reel';
+    const strip = document.createElement('span');
+    strip.className = 'strip';
+    // Build reel content: ~20 random glyphs, then target at bottom
+    const glyphCount = 22;
+    for (let i = 0; i < glyphCount; i++) {
+      const g = document.createElement('span');
+      g.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      strip.appendChild(g);
+    }
+    const target = document.createElement('span');
+    target.textContent = c;
+    strip.appendChild(target);
+    wrap.appendChild(strip);
+    lineEl.appendChild(wrap);
+    reels.push({ strip, targetIndex: glyphCount });
+  }
+  quoteEl.appendChild(lineEl);
+});
+
+// Drive reels: spin, stagger-stop left-to-right, hold, re-spin.
+const SPIN_MS = 1400;
+const STAGGER_MS = 90;
+const HOLD_MS = 2500;
+
+function spinCycle() {
+  // reset: strip at top
+  reels.forEach(r => {
+    r.strip.style.transition = 'none';
+    r.strip.style.transform = 'translateY(0)';
+  });
+  // force reflow
+  void document.body.offsetHeight;
+  // kick off animations
+  reels.forEach((r, i) => {
+    const delay = i * STAGGER_MS;
+    setTimeout(() => {
+      r.strip.style.transition = `transform ${SPIN_MS}ms cubic-bezier(0.15, 0.9, 0.15, 1)`;
+      r.strip.style.transform = `translateY(-${r.targetIndex * 1.2}em)`;
+    }, delay);
+  });
+  const totalSpinMs = SPIN_MS + reels.length * STAGGER_MS;
+  setTimeout(spinCycle, totalSpinMs + HOLD_MS);
+}
+spinCycle();
+
+// Constrain each reel to its target char's width so random-wide glyphs
+// (like @#$%) don't pad the reel out with dead space (e.g. N ' T in AREN'T).
+requestAnimationFrame(() => {
+  reels.forEach(r => {
+    const target = r.strip.children[r.targetIndex];
+    const w = target.getBoundingClientRect().width;
+    if (w > 0) r.strip.parentElement.style.width = w + 'px';
+  });
+});
+
+// Auto-fit: scale #quote down if its measured width exceeds container.
+function fitToContainer() {
+  const container = document.querySelector('.container');
+  const cw = container.clientWidth - 32;
+  const qw = quoteEl.scrollWidth;
+  if (qw > cw) {
+    const s = (cw / qw).toFixed(3);
+    quoteEl.style.transformOrigin = 'center center';
+    quoteEl.style.transform = `scale(${s})`;
+  } else {
+    quoteEl.style.transform = '';
+  }
+}
+requestAnimationFrame(() => { fitToContainer(); requestAnimationFrame(fitToContainer); });
+window.addEventListener('resize', fitToContainer);
+</script></body></html>
