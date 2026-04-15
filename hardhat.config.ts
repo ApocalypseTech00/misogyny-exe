@@ -23,11 +23,21 @@ const config: HardhatUserConfig = {
       url: process.env.BASE_MAINNET_RPC_URL || "https://mainnet.base.org",
       accounts: [PRIVATE_KEY],
     },
+    sepolia: {
+      url: process.env.ETHEREUM_SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+      accounts: [PRIVATE_KEY],
+    },
+    mainnet: {
+      url: process.env.ETHEREUM_MAINNET_RPC_URL || "https://eth.llamarpc.com",
+      accounts: [PRIVATE_KEY],
+    },
   },
   etherscan: {
     apiKey: {
       "base-sepolia": process.env.BASESCAN_API_KEY || "",
       "base-mainnet": process.env.BASESCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
     },
     customChains: [
       {

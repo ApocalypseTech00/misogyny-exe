@@ -59,7 +59,7 @@ function requireEnv(name: string): string {
 async function main() {
   const [deployer] = await ethers.getSigners();
   const balance = await ethers.provider.getBalance(deployer.address);
-  const DRY_RUN = process.argv.includes("--dry-run");
+  const DRY_RUN = process.argv.includes("--dry-run") || process.env.DRY_RUN === "1";
 
   console.log("=== MISOGYNY.EXE V6 — Deploy ===");
   console.log(`Network:  ${network.name}${DRY_RUN ? " (DRY RUN — no txs will be sent)" : ""}`);

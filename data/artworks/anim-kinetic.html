@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  #stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .word {
+    color: #F918D0;
+    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 0.95;
+    opacity: 0;
+    transform: scale(0.6);
+    display: block;
+    white-space: nowrap;
+    will-change: transform, opacity;
+    transition: opacity 0.25s, transform 0.35s cubic-bezier(0.2, 1.2, 0.3, 1);
+  }
+  .word.on { opacity: 1; transform: scale(1); }
+  .word { max-width: 90vmin; overflow: hidden; }
+  .word.huge { font-size: 15vmin; font-weight: 900; }
+  .word.big { font-size: 10vmin; }
+  .word.med { font-size: 6.5vmin; }
+  .word.sm { font-size: 4vmin; }
+  .word.skew-l { transform-origin: left center; }
+  .word.skew-r { transform-origin: right center; }
+  .word.on.skew-l { transform: scale(1) translateX(-5vmin); }
+  .word.on.skew-r { transform: scale(1) translateX(5vmin); }
+  .label { position: absolute; bottom: 30px; font-size: 10px; color: #F918D030; letter-spacing: 0.3em; text-transform: uppercase; z-index: 11; }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="stage"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+
+// Kinetic typography: each word gets its own timing, scale, position.
+// Loud words big, connective words small, layout varies.
+// 'Heavy' words are ones that land emotionally — pick heuristically.
+const HEAVY = new Set(['NOT','NEVER','ALWAYS','ALL','EVERY','NO','WOMEN','MEN','RUINED','STUPID','BELONG','CAN\'T','WONT','HATE','MUST','SHOULD','SHOULDNT']);
+
+function classForWord(word, i, total) {
+  const upper = word.toUpperCase().replace(/[^A-Z']/g, '');
+  if (total <= 4) {
+    // Punchy: alternate big/huge
+    return (i % 2 === 0) ? 'big' : 'huge';
+  }
+  if (HEAVY.has(upper)) return 'huge';
+  if (upper.length <= 2) return 'sm';
+  if (upper.length <= 4) return 'med';
+  return 'big';
+}
+
+function render() {
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  const quote = QUOTES[0];
+  const words = quote.split(/\s+/);
+  const total = words.length;
+  const elems = words.map((w, i) => {
+    const el = document.createElement('div');
+    el.className = `word ${classForWord(w, i, total)}`;
+    el.textContent = w;
+    stage.appendChild(el);
+    return el;
+  });
+
+  // Sequential appearance with variable pacing — heavy words get a longer hold.
+  let offset = 350;
+  elems.forEach((el, i) => {
+    setTimeout(() => el.classList.add('on'), offset);
+    const cls = el.className;
+    offset += cls.includes('huge') ? 520 : cls.includes('big') ? 380 : cls.includes('med') ? 260 : 180;
+  });
+
+  // Hold then fade out, loop
+  const finishAt = offset + 3000;
+  setTimeout(() => {
+    elems.forEach((el, i) => setTimeout(() => el.classList.remove('on'), i * 70));
+    setTimeout(render, elems.length * 70 + 900);
+  }, finishAt);
+}
+render();
+</script></body></html>

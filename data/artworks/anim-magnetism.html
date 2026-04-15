@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  .ch {
+    display: inline-block;
+    transition: transform 0.18s cubic-bezier(0.3, 1.2, 0.4, 1);
+    will-change: transform;
+  }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="quote"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const quote = QUOTES[0];
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+
+const chars = [];
+lines.forEach(line => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'quote-line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  lineEl.style.lineHeight = '1.3';
+  for (const c of line) {
+    const span = document.createElement('span');
+    span.className = 'ch';
+    span.textContent = c === ' ' ? '\u00A0' : c;
+    // 'Weight' per letter — some letters heavier, drift less
+    const weight = 0.4 + Math.random() * 0.9;
+    lineEl.appendChild(span);
+    if (c !== ' ') chars.push({ el: span, weight });
+  }
+  quoteEl.appendChild(lineEl);
+});
+
+let cursorX = window.innerWidth / 2;
+let cursorY = window.innerHeight / 2;
+let realMouse = false;
+let lastMouseMs = 0;
+
+document.addEventListener('mousemove', (e) => {
+  cursorX = e.clientX; cursorY = e.clientY;
+  realMouse = true; lastMouseMs = performance.now();
+});
+
+function tick(t) {
+  if (!realMouse || t - lastMouseMs > 800) {
+    realMouse = false;
+    const angle = t / 1400;
+    const radius = 180 + Math.sin(t / 1100) * 80;
+    cursorX = window.innerWidth / 2 + Math.cos(angle) * radius;
+    cursorY = window.innerHeight / 2 + Math.sin(angle * 1.2) * radius;
+  }
+
+  const ATTRACT_RADIUS = 260;
+  const ATTRACT_STRENGTH = 55;
+  chars.forEach(c => {
+    const r = c.el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dx = cursorX - cx;
+    const dy = cursorY - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < ATTRACT_RADIUS && dist > 0.01) {
+      const force = (1 - dist / ATTRACT_RADIUS) * ATTRACT_STRENGTH / c.weight;
+      const tx = (dx / dist) * force;
+      const ty = (dy / dist) * force;
+      c.el.style.transform = `translate(${tx}px, ${ty}px)`;
+    } else {
+      c.el.style.transform = 'translate(0,0)';
+    }
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script></body></html>

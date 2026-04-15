@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; filter: url(#heatwave); }
+  .frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .frame::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  /* Warm glow rising from below */
+  .heat-base {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 35%;
+    background: linear-gradient(to top, rgba(249,24,208,0.16) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 4;
+  }
+</style></head><body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <filter id="heatwave" x="0" y="0" width="100%" height="100%">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" seed="1" />
+      <feDisplacementMap in="SourceGraphic" scale="10" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
+<div class="container">
+  <div class="frame">
+    <div class="vignette"></div>
+    <div class="heat-base"></div>
+    <div id="quote"></div>
+  </div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const quote = QUOTES[0];
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+
+lines.forEach(line => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'quote-line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  lineEl.style.lineHeight = '1.3';
+  lineEl.textContent = line;
+  quoteEl.appendChild(lineEl);
+});
+
+// Animate the turbulence so heat appears to rise
+const turb = document.getElementById('turb');
+let seed = 1;
+function animate(t) {
+  const ms = t / 1000;
+  const baseY = 0.04 + 0.008 * Math.sin(ms * 0.8);
+  turb.setAttribute('baseFrequency', `0.012 ${baseY.toFixed(4)}`);
+  turb.setAttribute('seed', String(Math.floor(ms * 3) % 1000));
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+</script></body></html>

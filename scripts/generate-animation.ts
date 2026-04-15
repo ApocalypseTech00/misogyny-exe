@@ -22,24 +22,50 @@ const ANIMATION_STYLES = [
   "typewriter",
   "redacted",
   "flicker",
-  "heartbeat",
   "corruption",
   "interactive",
-  "ascii",
+  "stamp",
+  "echo",
+  "morse",
+  "ripple",
+  "liquid",
+  "kinetic",
+  "scan",
+  "magnetism",
+  "heat",
+  "chromatic",
+  "goo",
+  "moire",
+  "halftone",
+  "feedback",
+  "voronoi",
 ] as const;
 
 type AnimationStyle = (typeof ANIMATION_STYLES)[number];
 
 // Weighted distribution — scramble is the hero (50%), rest split the remainder
 const STYLE_WEIGHTS: Record<AnimationStyle, number> = {
-  scramble: 50,
+  scramble: 30,
   typewriter: 10,
-  redacted: 8,
+  redacted: 10,
   flicker: 8,
-  heartbeat: 8,
-  corruption: 6,
+  corruption: 8,
   interactive: 5,
-  ascii: 5,
+  stamp: 8,
+  echo: 7,
+  morse: 5,
+  ripple: 6,
+  liquid: 6,
+  kinetic: 8,
+  scan: 6,
+  magnetism: 4,
+  heat: 5,
+  chromatic: 6,
+  goo: 5,
+  moire: 5,
+  halftone: 5,
+  feedback: 5,
+  voronoi: 5,
 };
 
 /**
@@ -61,10 +87,20 @@ export function pickAnimationStyle(tokenId: number): AnimationStyle {
 
 // --- Shared CSS/HTML parts ---
 
-const SHARED_CSS = `
+type AnimationPalette = "hate" | "redeemed";
+
+function getSharedCss(palette: AnimationPalette): string {
+  const isHate = palette === "hate";
+  const bg = isHate ? "#1a1a1a" : "#F918D0";
+  const text = isHate ? "#F918D0" : "#0a0a0a";
+  const glow = isHate
+    ? "0 0 8px #F918D080, 0 0 20px #F918D030"
+    : "0 0 8px #0a0a0a40, 0 0 20px #0a0a0a20";
+  const labelColor = isHate ? "#F918D030" : "#0a0a0a60";
+  return `
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #1a1a1a;
+    background: ${bg};
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,39 +121,42 @@ const SHARED_CSS = `
   .container::after {
     content: '';
     position: absolute; inset: 0;
-    background: repeating-linear-gradient(
+    background: ${isHate ? `repeating-linear-gradient(
       to bottom, transparent, transparent 1px,
       rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px
-    );
+    )` : "none"};
     pointer-events: none; z-index: 10;
   }
   .vignette {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+    background: ${isHate ? "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%)" : "none"};
     pointer-events: none; z-index: 9;
   }
   .quote-line {
     text-align: center; text-transform: uppercase;
-    color: #F918D0; letter-spacing: 0.05em;
+    color: ${text}; letter-spacing: 0.05em;
     min-height: 1.2em; padding: 0 5vmin;
-    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
+    text-shadow: ${glow};
   }
   .label {
     position: absolute; bottom: 30px;
-    font-size: 10px; color: #F918D030;
+    font-size: 10px; color: ${labelColor};
     letter-spacing: 0.3em; text-transform: uppercase;
   }
 `;
+}
+
+const SHARED_CSS = getSharedCss("hate");
 
 const SHARED_JS_UTILS = `
 const LINES_CONFIG = {
-  5:  { wpl: 3, size: 8 },
+  4:  { wpl: 1, size: 12 },
   10: { wpl: 3, size: 6 },
   15: { wpl: 3, size: 5 },
   25: { wpl: 3, size: 4 },
 };
 function getConfig(wc) {
-  if (wc <= 5) return LINES_CONFIG[5];
+  if (wc <= 4)  return LINES_CONFIG[4];
   if (wc <= 10) return LINES_CONFIG[10];
   if (wc <= 18) return LINES_CONFIG[15];
   return LINES_CONFIG[25];
@@ -146,8 +185,10 @@ export function generateAnimation(opts: {
   quote: string;
   style?: AnimationStyle;
   outputDir?: string;
+  palette?: AnimationPalette;
 }): { htmlPath: string; style: AnimationStyle } {
   const style = opts.style || pickAnimationStyle(opts.id);
+  const palette: AnimationPalette = opts.palette || "hate";
   const dir = opts.outputDir || path.join(__dirname, "..", "data", "artworks", "animations");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
@@ -179,6 +220,11 @@ export function generateAnimation(opts: {
       /const QUOTE = ".*?";/,
       `const QUOTE = "${quoteEscaped}";`
     );
+    // Replace PALETTE constant in palette-aware templates
+    html = html.replace(
+      /const PALETTE = "[^"]*";/,
+      `const PALETTE = "${palette}";`
+    );
 
     // Remove font-face that references local files — use system fonts on IPFS
     html = html.replace(
@@ -192,7 +238,7 @@ export function generateAnimation(opts: {
     );
   } else {
     // Fallback: generate a simple scramble animation inline
-    html = generateFallbackScramble(quoteEscaped);
+    html = generateFallbackScramble(quoteEscaped, palette);
   }
 
   const htmlPath = path.join(dir, `${opts.id}-${style}.html`);
@@ -201,15 +247,14 @@ export function generateAnimation(opts: {
   return { htmlPath, style };
 }
 
-function generateFallbackScramble(quoteEscaped: string): string {
+function generateFallbackScramble(quoteEscaped: string, palette: AnimationPalette = "hate"): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<style>${SHARED_CSS}</style></head>
+<style>${getSharedCss(palette)}</style></head>
 <body>
 <div class="container">
   <div class="vignette"></div>
   <div id="quote"></div>
-  <span class="label">MISOGYNY.EXE</span>
 </div>
 <script>
 ${SHARED_JS_UTILS}

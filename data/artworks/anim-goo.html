@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+
+  /* Goo field: everything inside merges via heavy blur + contrast */
+  .goo-field {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    filter: url(#goo);
+    z-index: 5;
+  }
+  .quote-line {
+    text-align: center; text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    padding: 0 5vmin;
+  }
+  .ch {
+    display: inline-block;
+    will-change: transform;
+    transition: transform 0.06s linear;
+  }
+  .blob {
+    position: absolute;
+    width: 14vmin; height: 14vmin;
+    border-radius: 50%;
+    background: #F918D0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    will-change: transform, left, top;
+  }
+</style></head><body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <filter id="goo">
+      <feGaussianBlur id="gooBlur" in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feColorMatrix id="gooMatrix" in="blur" type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 18 -8" result="goo"/>
+      <feBlend in="SourceGraphic" in2="goo"/>
+    </filter>
+  </defs>
+</svg>
+<div class="container">
+  <div class="vignette"></div>
+  <div class="goo-field">
+    <div id="quote"></div>
+    <div class="blob" id="blob"></div>
+  </div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const quote = QUOTES[0];
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+const letterSpans = [];
+lines.forEach(line => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'quote-line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  lineEl.style.lineHeight = '1.3';
+  for (const c of line) {
+    const sp = document.createElement('span');
+    sp.className = 'ch';
+    sp.textContent = c === ' ' ? '\u00A0' : c;
+    lineEl.appendChild(sp);
+    if (c !== ' ') letterSpans.push(sp);
+  }
+  quoteEl.appendChild(lineEl);
+});
+
+const blob = document.getElementById('blob');
+const gooField = document.querySelector('.goo-field');
+const gooBlur = document.getElementById('gooBlur');
+const gooMatrix = document.getElementById('gooMatrix');
+
+let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+let tx = mx, ty = my;
+let realMouse = false, lastMouseMs = 0;
+
+// Datamosh state: when true, crank blur + throw extra blobs that drag text
+let moshUntil = 0;
+const moshBlobs = [];
+
+document.addEventListener('mousemove', (e) => {
+  tx = e.clientX; ty = e.clientY;
+  realMouse = true; lastMouseMs = performance.now();
+});
+
+document.addEventListener('click', (e) => {
+  moshUntil = performance.now() + 1200;
+  // Spawn 6 extra blobs at click point, flying outward
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+    const speed = 180 + Math.random() * 260;
+    const b = document.createElement('div');
+    b.className = 'blob';
+    b.style.width = (6 + Math.random() * 10) + 'vmin';
+    b.style.height = b.style.width;
+    b.style.left = e.clientX + 'px';
+    b.style.top = e.clientY + 'px';
+    gooField.appendChild(b);
+    moshBlobs.push({
+      el: b,
+      x: e.clientX, y: e.clientY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1.2,
+    });
+  }
+});
+
+function tick(t) {
+  if (!realMouse || t - lastMouseMs > 600) {
+    realMouse = false;
+    tx = window.innerWidth / 2 + Math.cos(t / 900) * 240;
+    ty = window.innerHeight / 2 + Math.sin(t / 680) * 100;
+  }
+  mx += (tx - mx) * 0.12;
+  my += (ty - my) * 0.12;
+  blob.style.left = mx + 'px';
+  blob.style.top  = my + 'px';
+
+  // Datamosh state: boost blur + contrast while active + drip letters randomly
+  const moshActive = t < moshUntil;
+  gooBlur.setAttribute('stdDeviation', moshActive ? '18' : '8');
+  gooMatrix.setAttribute('values',
+    moshActive
+      ? '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -12'
+      : '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8'
+  );
+
+  if (moshActive) {
+    const progress = 1 - (moshUntil - t) / 1200;
+    letterSpans.forEach((sp, i) => {
+      const drip = progress * 20 + Math.sin(t / 80 + i) * 6;
+      const jx = Math.sin(t / 60 + i * 1.7) * 5;
+      sp.style.transform = `translate(${jx.toFixed(1)}px, ${drip.toFixed(1)}px)`;
+    });
+  } else {
+    letterSpans.forEach(sp => { if (sp.style.transform) sp.style.transform = 'translate(0,0)'; });
+  }
+
+  // Animate mosh blobs
+  const now = t / 1000;
+  for (let i = moshBlobs.length - 1; i >= 0; i--) {
+    const m = moshBlobs[i];
+    m.life -= 0.016;
+    if (m.life <= 0) {
+      m.el.remove();
+      moshBlobs.splice(i, 1);
+      continue;
+    }
+    m.x += m.vx * 0.016;
+    m.y += m.vy * 0.016;
+    m.vx *= 0.95;
+    m.vy *= 0.95;
+    m.el.style.left = m.x + 'px';
+    m.el.style.top = m.y + 'px';
+    m.el.style.opacity = String(m.life);
+  }
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script></body></html>

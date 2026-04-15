@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * Implements the interface CollectionAdmin expects:
  *   mint(address, string) -> uint256
  *   updateTokenURI(uint256, string)
- *   setRoyaltyReceiver(address)
+ *   setDefaultRoyaltyReceiver(address)
  *   transferOwnership(address)
  */
 contract MockRareCollection is ERC721URIStorage, Ownable {
@@ -34,7 +34,7 @@ contract MockRareCollection is ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, uri);
     }
 
-    function setRoyaltyReceiver(address receiver) external onlyOwner {
+    function setDefaultRoyaltyReceiver(address receiver) external onlyOwner {
         royaltyReceiver = receiver;
         emit RoyaltyReceiverUpdated(receiver);
     }

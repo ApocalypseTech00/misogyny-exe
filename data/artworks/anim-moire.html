@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.1) 1px, rgba(0,0,0,0.1) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+
+  #text-wrap {
+    filter: url(#moireWarp);
+    z-index: 3;
+    position: relative;
+  }
+  .quote-line {
+    text-align: center;
+    text-transform: uppercase;
+    color: #F918D0;
+    letter-spacing: 0.05em;
+    min-height: 1.2em;
+    padding: 0 5vmin;
+    text-shadow: 0 0 8px #F918D080;
+  }
+
+  /* Two overlapping line gratings clipped over the same region as the text */
+  .grating {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    mix-blend-mode: difference;
+    opacity: 0.7;
+  }
+  .grating.a {
+    background: repeating-linear-gradient(
+      var(--a, 0deg),
+      transparent 0, transparent 5px,
+      rgba(249,24,208,0.5) 5px, rgba(249,24,208,0.5) 8px
+    );
+  }
+  .grating.b {
+    background: repeating-linear-gradient(
+      var(--b, 8deg),
+      transparent 0, transparent 5px,
+      rgba(249,24,208,0.5) 5px, rgba(249,24,208,0.5) 8px
+    );
+  }
+</style></head><body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <filter id="moireWarp">
+      <feTurbulence id="moireTurb" type="fractalNoise" baseFrequency="0.02 0.05" numOctaves="1" seed="1"/>
+      <feDisplacementMap id="moireDisp" in="SourceGraphic" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="text-wrap"><div id="quote"></div></div>
+  <div class="grating a" id="gA"></div>
+  <div class="grating b" id="gB"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const quote = QUOTES[0];
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+lines.forEach(line => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'quote-line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  lineEl.style.lineHeight = '1.3';
+  lineEl.textContent = line;
+  quoteEl.appendChild(lineEl);
+});
+
+const gA = document.getElementById('gA');
+const gB = document.getElementById('gB');
+const turb = document.getElementById('moireTurb');
+const disp = document.getElementById('moireDisp');
+let mx = 0.5, my = 0.5;
+let realMouse = false, lastMouseMs = 0;
+document.addEventListener('mousemove', (e) => {
+  mx = e.clientX / window.innerWidth;
+  my = e.clientY / window.innerHeight;
+  realMouse = true; lastMouseMs = performance.now();
+});
+
+function tick(t) {
+  if (!realMouse || t - lastMouseMs > 600) {
+    realMouse = false;
+    mx = 0.5 + 0.5 * Math.cos(t / 1400);
+    my = 0.5 + 0.5 * Math.sin(t / 900);
+  }
+  const angleA = (mx - 0.5) * 30;
+  const angleB = angleA + 6 + (my - 0.5) * 10;
+  gA.style.setProperty('--a', angleA.toFixed(2) + 'deg');
+  gB.style.setProperty('--b', angleB.toFixed(2) + 'deg');
+
+  // Text morphs along with the grating: frequency + displacement scale ride on cursor
+  const fx = 0.015 + (mx * 0.04);
+  const fy = 0.03 + (my * 0.05);
+  const scale = 6 + Math.abs(angleA) * 0.5 + Math.abs(angleB) * 0.3;
+  turb.setAttribute('baseFrequency', fx.toFixed(4) + ' ' + fy.toFixed(4));
+  turb.setAttribute('seed', String(Math.floor(t / 80) % 1000));
+  disp.setAttribute('scale', String(scale));
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script></body></html>

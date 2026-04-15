@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  canvas { position: absolute; inset: 0; display: block; z-index: 2; }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <canvas id="c"></canvas>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const quote = QUOTES[0].toUpperCase();
+const wc = quote.split(/\s+/).length;
+
+// Break into lines (same as other templates)
+const LINES_CONFIG = { 4:{wpl:1,size:0.18}, 10:{wpl:3,size:0.096}, 15:{wpl:3,size:0.084}, 25:{wpl:3,size:0.066} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+
+// Render text to offscreen canvas at full res, sample as source
+const off = document.createElement('canvas');
+off.width = canvas.width;
+off.height = canvas.height;
+const offCtx = off.getContext('2d', { willReadFrequently: true });
+
+function drawSourceText() {
+  offCtx.clearRect(0, 0, off.width, off.height);
+  offCtx.fillStyle = '#fff';
+  offCtx.textAlign = 'center';
+  const fontPx = Math.min(off.width, off.height) * config.size;
+  offCtx.font = `900 italic ${fontPx}px Georgia, 'Times New Roman', serif`;
+  const lineHeight = fontPx * 1.3;
+  const startY = (off.height - lineHeight * lines.length) / 2 + fontPx * 0.75;
+  lines.forEach((line, i) => {
+    offCtx.fillText(line, off.width / 2, startY + i * lineHeight);
+  });
+}
+drawSourceText();
+let srcData = offCtx.getImageData(0, 0, off.width, off.height).data;
+
+window.addEventListener('resize', () => {
+  off.width = canvas.width;
+  off.height = canvas.height;
+  drawSourceText();
+  srcData = offCtx.getImageData(0, 0, off.width, off.height).data;
+});
+
+// Cursor tracking
+let mx = canvas.width / 2, my = canvas.height / 2;
+let realMouse = false, lastMouseMs = 0;
+canvas.addEventListener('mousemove', (e) => {
+  const r = canvas.getBoundingClientRect();
+  mx = e.clientX - r.left; my = e.clientY - r.top;
+  realMouse = true; lastMouseMs = performance.now();
+});
+
+const GRID = 14; // larger grid so ASCII scramble chars have room near cursor
+const SCRAMBLE_CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`01ABCDEFGHIJKLMNOPQRSTUVWXYZ\u2588\u2593\u2592\u2591';
+
+function draw(t) {
+  if (!realMouse || t - lastMouseMs > 600) {
+    realMouse = false;
+    mx = canvas.width / 2 + Math.cos(t / 1000) * canvas.width * 0.2;
+    my = canvas.height / 2 + Math.sin(t / 700) * canvas.height * 0.15;
+  }
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const REVEAL_R = 180;
+  const MAX_R = GRID / 2 * 0.85;
+  const MIN_FRACTION = 0.4;
+
+  ctx.fillStyle = '#F918D0';
+  ctx.shadowColor = '#F918D0';
+  ctx.shadowBlur = 2;
+
+  for (let y = GRID / 2; y < canvas.height; y += GRID) {
+    for (let x = GRID / 2; x < canvas.width; x += GRID) {
+      const idx = ((Math.floor(y) * off.width + Math.floor(x)) * 4) + 3;
+      if (srcData[idx] < 40) continue;
+      const dx = x - mx, dy = y - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < REVEAL_R) {
+        // Near cursor — draw ASCII scramble char (updates every few frames per cell)
+        const frameSeed = Math.floor(t / 70) + Math.floor(x / GRID) * 31 + Math.floor(y / GRID) * 97;
+        const ch = SCRAMBLE_CHARS[Math.abs(frameSeed) % SCRAMBLE_CHARS.length];
+        ctx.save();
+        ctx.font = `700 ${GRID * 0.95}px 'Courier New', monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ch, x, y);
+        ctx.restore();
+      } else {
+        // Far cursor — standard halftone dot
+        const near = 0;
+        const r = MAX_R * (MIN_FRACTION + (1 - MIN_FRACTION) * near);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script></body></html>

@@ -13,8 +13,11 @@ typechain-types/
 coverage/
 coverage.json
 
-# Runtime data
-data/
+# Runtime data (ignore contents EXCEPT animation templates — they're source code)
+data/*
+!data/artworks/
+data/artworks/*
+!data/artworks/anim-*.html
 logs/
 
 # OS files

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  .ch { display: inline-block; transition: color 0.12s ease-out; }
+  .ch.morse { font-family: 'Courier New', monospace; font-style: normal; font-weight: 700; }
+  .label { position: absolute; bottom: 30px; font-size: 10px; color: #F918D030; letter-spacing: 0.3em; text-transform: uppercase; z-index: 11; }
+</style></head><body>
+<div class="container">
+  <div class="vignette"></div>
+  <div id="quote"></div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const MORSE = {
+  A:'.-',   B:'-...', C:'-.-.', D:'-..',  E:'.',    F:'..-.',
+  G:'--.',  H:'....', I:'..',   J:'.---', K:'-.-',  L:'.-..',
+  M:'--',   N:'-.',   O:'---',  P:'.--.', Q:'--.-', R:'.-.',
+  S:'...',  T:'-',    U:'..-',  V:'...-', W:'.--',  X:'-..-',
+  Y:'-.--', Z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.'
+};
+
+function render() {
+  const quoteEl = document.getElementById('quote');
+  quoteEl.innerHTML = '';
+  const quote = QUOTES[0];
+  const wc = quote.split(/\s+/).length;
+  const config = getConfig(wc);
+  const lines = breakIntoLines(quote, config.wpl);
+
+  // Group chars by word so we can resolve word-by-word (prevents mid-word
+  // layout shifts that happen when morse is wider than letters).
+  const words = [];
+  lines.forEach(line => {
+    const lineEl = document.createElement('div');
+    lineEl.className = 'quote-line';
+    lineEl.style.fontSize = config.size + 'vmin';
+    lineEl.style.lineHeight = '1.3';
+    const tokens = line.toUpperCase().split(/(\s+)/);
+    tokens.forEach(tok => {
+      if (/^\s+$/.test(tok)) {
+        const space = document.createElement('span');
+        space.className = 'ch';
+        space.textContent = '\u00A0';
+        lineEl.appendChild(space);
+        return;
+      }
+      const wordChars = [];
+      for (const c of tok) {
+        const span = document.createElement('span');
+        span.className = 'ch morse';
+        span.textContent = MORSE[c] || c;
+        lineEl.appendChild(span);
+        wordChars.push({ el: span, target: c });
+      }
+      words.push(wordChars);
+    });
+    quoteEl.appendChild(lineEl);
+  });
+
+  // Resolve all chars of a word at once, then next word.
+  words.forEach((wordChars, wi) => {
+    setTimeout(() => {
+      wordChars.forEach(({ el, target }) => {
+        el.textContent = target;
+        el.classList.remove('morse');
+      });
+    }, 600 + wi * 380);
+  });
+  const totalMs = 600 + words.length * 380 + 3500;
+  setTimeout(render, totalMs);
+}
+render();
+</script></body></html>

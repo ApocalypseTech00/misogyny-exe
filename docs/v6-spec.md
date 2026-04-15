@@ -423,7 +423,7 @@ All quote strings escaped before insertion into SVG, HTML, JS string literals. M
 
 On page load: Rare collection `totalSupply()` → loop `tokenURI(i)` + QuoteRegistry `quoteOf(i)` + `comebackOf(i)` + listing state. **Use Multicall3** (`0xcA11bde05977b3631167028862bE2a173976CA11`) to batch — otherwise 400+ RPC calls per visitor kill public RPCs.
 
-**RPC fallback chain:** primary = operator-chosen RPC (Alchemy/Infura burner-keyed or a paid endpoint), fallbacks = `eth.llamarpc.com`, `1rpc.io/eth`, `rpc.ankr.com/eth`. Try in order, move to next on failure. One viral day without fallbacks browns out the site.
+**RPC fallback chain:** all free public RPCs, no API keys, matching V3's pattern (V3 has run on `mainnet.base.org` for over a year). Mainnet primary = `https://eth.llamarpc.com`, fallbacks = `https://ethereum-rpc.publicnode.com`, `https://1rpc.io/eth`, `https://rpc.ankr.com/eth`. Sepolia primary = `https://ethereum-sepolia-rpc.publicnode.com`, fallbacks = `https://1rpc.io/sepolia`, `https://rpc.sepolia.org`. Try in order, move to next on failure. One viral day without fallbacks browns out the site.
 
 Client-side `sessionStorage` cache, 60s TTL.
 

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IRareCollection {
     function mint(address to, string calldata tokenURI) external returns (uint256);
     function updateTokenURI(uint256 tokenId, string calldata uri) external;
-    function setRoyaltyReceiver(address receiver) external;
+    function setDefaultRoyaltyReceiver(address receiver) external;
     function transferOwnership(address newOwner) external;
 }
 
@@ -92,7 +92,7 @@ contract CollectionAdmin is Ownable {
     // -------------------------------------------------------
 
     function setRoyaltyReceiver(address receiver) external onlyOwner {
-        COLLECTION.setRoyaltyReceiver(receiver);
+        COLLECTION.setDefaultRoyaltyReceiver(receiver);
     }
 
     function transferCollectionOwnership(address newOwner) external onlyOwner {

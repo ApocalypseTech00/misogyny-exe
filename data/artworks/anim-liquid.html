@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
+  .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; filter: url(#liquid); }
+  .frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .frame::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  .ch { display: inline-block; will-change: transform; }
+  .label { position: absolute; bottom: 30px; font-size: 10px; color: #F918D030; letter-spacing: 0.3em; text-transform: uppercase; z-index: 11; }
+</style></head><body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <filter id="liquid">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.02 0.035" numOctaves="2" seed="1" />
+      <feDisplacementMap id="disp" in="SourceGraphic" scale="22" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
+<div class="container">
+  <div class="frame">
+    <div class="vignette"></div>
+    <div id="quote"></div>
+  </div>
+</div>
+<script>
+const QUOTES = ["Women have ruined the country and should not be allowed to vote."];
+const LINES_CONFIG = { 4:{wpl:1,size:12}, 10:{wpl:3,size:6}, 15:{wpl:3,size:5}, 25:{wpl:3,size:4} };
+function getConfig(wc) { if (wc<=4) return LINES_CONFIG[4]; if (wc<=10) return LINES_CONFIG[10]; if (wc<=18) return LINES_CONFIG[15]; return LINES_CONFIG[25]; }
+function breakIntoLines(text, wpl) {
+  const words = text.split(/\s+/);
+  const totalLines = Math.ceil(words.length / wpl);
+  const base = Math.floor(words.length / totalLines);
+  const extra = words.length % totalLines;
+  const lines = []; let idx = 0;
+  for (let i = 0; i < totalLines; i++) { const take = base + (i < extra ? 1 : 0); lines.push(words.slice(idx, idx + take).join(' ')); idx += take; }
+  return lines;
+}
+
+const quoteEl = document.getElementById('quote');
+const quote = QUOTES[0];
+const wc = quote.split(/\s+/).length;
+const config = getConfig(wc);
+const lines = breakIntoLines(quote, config.wpl);
+
+lines.forEach(line => {
+  const lineEl = document.createElement('div');
+  lineEl.className = 'quote-line';
+  lineEl.style.fontSize = config.size + 'vmin';
+  lineEl.style.lineHeight = '1.3';
+  lineEl.textContent = line;
+  quoteEl.appendChild(lineEl);
+});
+
+// Animate turbulence baseFrequency + seed for a flowing liquid distortion
+const turb = document.getElementById('turb');
+let mouseX = 0.5, mouseY = 0.5;
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX / window.innerWidth;
+  mouseY = e.clientY / window.innerHeight;
+});
+
+const disp = document.getElementById('disp');
+const MAX_SCALE = 22;
+// Phase cycle: 0-4s distort strong, 4-5.5s settle to 0, 5.5-9s hold legible,
+// 9-10.5s ramp back up. Loops. For long quotes we want longer legible holds.
+const PHASE_DISTORT = wc > 10 ? 3500 : 4200;
+const SETTLE = 1500;
+const HOLD = wc > 10 ? 4500 : 3500;
+const RAMP = 1500;
+const CYCLE = PHASE_DISTORT + SETTLE + HOLD + RAMP;
+
+function animate(t) {
+  const ms = t / 1000;
+  const fx = 0.015 + 0.02 * (0.5 + 0.5 * Math.sin(ms * 0.6));
+  const fy = 0.028 + 0.02 * (0.5 + 0.5 * Math.cos(ms * 0.4));
+  turb.setAttribute('baseFrequency', fx + ' ' + fy);
+  turb.setAttribute('seed', String(Math.floor(ms * 2) % 1000));
+
+  const p = t % CYCLE;
+  let scale;
+  if (p < PHASE_DISTORT) scale = MAX_SCALE;
+  else if (p < PHASE_DISTORT + SETTLE) scale = MAX_SCALE * (1 - (p - PHASE_DISTORT) / SETTLE);
+  else if (p < PHASE_DISTORT + SETTLE + HOLD) scale = 0;
+  else scale = MAX_SCALE * ((p - PHASE_DISTORT - SETTLE - HOLD) / RAMP);
+  disp.setAttribute('scale', String(scale));
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+</script></body></html>
