@@ -32,11 +32,6 @@
     );
     pointer-events: none; z-index: 10;
   }
-  .vignette {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
-    pointer-events: none; z-index: 9;
-  }
   .quote-line {
     text-align: center;
     text-transform: uppercase;
@@ -44,7 +39,6 @@
     letter-spacing: 0.05em;
     min-height: 1.2em;
     padding: 0 5vmin;
-    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020;
     animation: flicker 5.4s infinite;
   }
   .quote-line:nth-child(2) { animation-delay: -1.7s; animation-duration: 5.9s; }
@@ -52,22 +46,22 @@
   .quote-line:nth-child(4) { animation-delay: -2.2s; animation-duration: 5.6s; }
 
   @keyframes flicker {
-    0%   { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; }
-    2%   { opacity: 0.18; text-shadow: none; transform: translateX(-1px); }
-    3%   { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; transform: translateX(0); }
+    0%   { opacity: 1; }
+    2%   { opacity: 0.18; transform: translateX(-1px); }
+    3%   { opacity: 1; transform: translateX(0); }
     18%  { opacity: 1; }
-    19%  { opacity: 0.05; text-shadow: none; }
-    21%  { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; }
+    19%  { opacity: 0.05; }
+    21%  { opacity: 1; }
     35%  { opacity: 1; }
-    36%  { opacity: 0.4; text-shadow: 0 0 4px #F918D040; transform: translateX(2px); }
-    37%  { opacity: 0; text-shadow: none; }
-    40%  { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; transform: translateX(0); }
+    36%  { opacity: 0.4; transform: translateX(2px); }
+    37%  { opacity: 0; }
+    40%  { opacity: 1; transform: translateX(0); }
     62%  { opacity: 1; }
-    63%  { opacity: 0.6; text-shadow: 0 0 4px #F918D040; }
-    64%  { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; }
+    63%  { opacity: 0.6; }
+    64%  { opacity: 1; }
     82%  { opacity: 1; }
-    83%  { opacity: 0.1; text-shadow: none; transform: translateX(-2px); }
-    85%  { opacity: 1; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030, 0 0 40px #F918D020; transform: translateX(0); }
+    83%  { opacity: 0.1; transform: translateX(-2px); }
+    85%  { opacity: 1; transform: translateX(0); }
     100% { opacity: 1; }
   }
 
@@ -80,7 +74,6 @@
 </head>
 <body>
 <div class="container">
-  <div class="vignette"></div>
   <div id="quote"></div>
 </div>
 <script>

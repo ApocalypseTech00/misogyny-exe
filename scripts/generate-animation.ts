@@ -220,7 +220,7 @@ export function generateAnimation(opts: {
 
   // Read the template HTML file for this style
   const templatePath = path.join(__dirname, "..", "data", "artworks",
-    style === "scramble" ? "ascii-prototype.html" : `anim-${style}.html`
+    `anim-${style}.html`
   );
 
   let html: string;

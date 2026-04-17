@@ -4,8 +4,7 @@
   body { background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'Courier New', monospace; font-weight: 700; }
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: flex-start; justify-content: flex-start; flex-direction: column; padding: 4vmin 5vmin; background: #0a0a0a; overflow: hidden; }
   .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.18) 1px, rgba(0,0,0,0.18) 3px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
-  .term { font-size: 1.75vmin; color: #F918D0; text-shadow: 0 0 6px #F918D088; letter-spacing: 0.02em; line-height: 1.45; z-index: 3; width: 100%; }
+  .term { font-size: 1.75vmin; color: #F918D0; letter-spacing: 0.02em; line-height: 1.45; z-index: 3; width: 100%; }
   .hdr { color: #F918D088; margin-bottom: 0.9vmin; font-size: 1.55vmin; }
   .prompt { color: #F918D0; }
   .dim { color: #F918D070; }
@@ -17,12 +16,11 @@
   .sol .fn { color: #7affd9; }
   .sol .str { color: #F918D0; }
   .row { min-height: 1em; }
-  .quote { color: #F918D0; text-shadow: 0 0 10px #F918D0cc, 0 0 22px #F918D055; font-family: Georgia, serif; font-style: italic; font-weight: 900; text-transform: uppercase; margin: 1.4vmin 0 1.4vmin 2vmin; line-height: 1.22; letter-spacing: 0.04em; border-left: 0.35vmin solid #F918D0aa; padding-left: 2vmin; max-width: 84vmin; }
+  .quote { color: #F918D0; font-family: Georgia, serif; font-style: italic; font-weight: 900; text-transform: uppercase; margin: 1.4vmin 0 1.4vmin 2vmin; line-height: 1.22; letter-spacing: 0.04em; border-left: 0.35vmin solid #F918D0aa; padding-left: 2vmin; max-width: 84vmin; }
   .cursor { display: inline-block; width: 0.5em; height: 1em; background: #F918D0; vertical-align: text-bottom; box-shadow: 0 0 6px #F918D0aa; animation: blink 0.6s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 </style></head><body>
 <div class="container">
-  <div class="vignette"></div>
   <div class="term">
     <div class="hdr">MISOGYNY.EXE V6 // pi@judie-2 // sepolia 11155111 // rare-protocol</div>
     <div class="row"><span class="prompt">pi@judie-2:~$</span> <span id="c1"></span></div>

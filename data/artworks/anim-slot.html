@@ -4,9 +4,8 @@
   body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; }
   .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
   #quote { position: relative; z-index: 6; text-align: center; padding: 0 4vmin; }
-  .line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; white-space: nowrap; }
+  .line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; white-space: nowrap; }
   .reel {
     display: inline-block; overflow: hidden; vertical-align: top;
     height: 1.2em; line-height: 1.2em;
@@ -19,7 +18,6 @@
   .space { display: inline-block; width: 0.4em; }
 </style></head><body>
 <div class="container">
-  <div class="vignette"></div>
   <div id="quote"></div>
 </div>
 <script>

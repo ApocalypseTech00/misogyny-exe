@@ -32,11 +32,6 @@
     );
     pointer-events: none; z-index: 10;
   }
-  .vignette {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
-    pointer-events: none; z-index: 9;
-  }
   .hex-bg {
     position: absolute; inset: 0;
     font-family: 'Courier New', monospace;
@@ -62,7 +57,6 @@
     letter-spacing: 0.05em;
     min-height: 1.2em;
     padding: 0 5vmin;
-    text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030;
   }
   .ch {
     display: inline-block;
@@ -73,7 +67,6 @@
     font-style: normal;
     font-weight: 700;
     color: #ffffff;
-    text-shadow: 0 0 6px #ffffffaa, 0 0 14px #ffffff55;
   }
   .label {
     position: absolute; bottom: 30px;
@@ -85,7 +78,6 @@
 </head>
 <body>
 <div class="container">
-  <div class="vignette"></div>
   <pre class="hex-bg" id="hex"></pre>
   <div id="quote"></div>
 </div>

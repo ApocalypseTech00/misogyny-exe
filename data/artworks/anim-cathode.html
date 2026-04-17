@@ -4,10 +4,9 @@
   body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
 
   .crt { position: relative; z-index: 5; transform-origin: center center; will-change: transform, filter, opacity; animation: powerCycle 5s ease-in-out infinite; }
-  .quote { text-align: center; text-transform: uppercase; letter-spacing: 0.05em; color: #F918D0; text-shadow: 0 0 10px #F918D0aa, 0 0 24px #F918D055; padding: 0 5vmin; line-height: 1.3; max-width: 96vmin; }
+  .quote { text-align: center; text-transform: uppercase; letter-spacing: 0.05em; color: #F918D0; padding: 0 5vmin; line-height: 1.3; max-width: 96vmin; }
 
   .flash { position: absolute; left: 50%; top: 50%; width: 100%; height: 2px; background: #ffffff; box-shadow: 0 0 18px #ffffffcc, 0 0 40px #F918D0aa; transform: translate(-50%, -50%) scaleX(0); opacity: 0; z-index: 6; }
   .dot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 14px #ffffffcc, 0 0 30px #F918D0aa; transform: translate(-50%, -50%) scale(0); opacity: 0; z-index: 7; }
@@ -41,7 +40,6 @@
   .dot { animation: flashDot 5s ease-in-out infinite; }
 </style></head><body>
 <div class="container">
-  <div class="vignette"></div>
   <div class="crt"><div class="quote" id="q"></div></div>
   <div class="flash"></div>
   <div class="dot"></div>

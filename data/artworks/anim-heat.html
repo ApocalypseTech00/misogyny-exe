@@ -5,8 +5,7 @@
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; filter: url(#heatwave); }
   .frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
   .frame::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
-  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; }
   /* Warm glow rising from below */
   .heat-base {
     position: absolute;
@@ -27,7 +26,6 @@
 </svg>
 <div class="container">
   <div class="frame">
-    <div class="vignette"></div>
     <div class="heat-base"></div>
     <div id="quote"></div>
   </div>

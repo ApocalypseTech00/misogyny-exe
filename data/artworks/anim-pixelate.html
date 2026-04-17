@@ -4,11 +4,9 @@
   body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; }
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
   canvas { position: absolute; inset: 0; display: block; z-index: 2; image-rendering: pixelated; }
 </style></head><body>
 <div class="container">
-  <div class="vignette"></div>
   <canvas id="c"></canvas>
 </div>
 <script>

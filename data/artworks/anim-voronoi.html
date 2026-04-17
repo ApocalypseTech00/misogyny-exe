@@ -4,8 +4,7 @@
   body { background: #1a1a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 900; cursor: crosshair; }
   .container { width: 100vmin; height: 100vmin; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; }
   .container::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.12) 1px, rgba(0,0,0,0.12) 2px); pointer-events: none; z-index: 10; }
-  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%); pointer-events: none; z-index: 9; }
-  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; text-shadow: 0 0 8px #F918D080, 0 0 20px #F918D030; }
+  .quote-line { text-align: center; text-transform: uppercase; color: #F918D0; letter-spacing: 0.05em; min-height: 1.2em; padding: 0 5vmin; }
   .cell {
     display: inline-block;
     position: relative;
@@ -17,13 +16,11 @@
     position: absolute;
     left: 0; top: 0;
     color: rgba(249, 24, 208, 0.12);
-    text-shadow: none;
     pointer-events: none;
     z-index: -1;
   }
 </style></head><body>
 <div class="container">
-  <div class="vignette"></div>
   <div id="quote"></div>
 </div>
 <script>
