@@ -12,6 +12,8 @@ import type { Candidate, Queue, QueueItem } from "./scraper";
 import { guard } from "./quote-guard";
 import * as spendCap from "./spend-cap";
 import * as tg from "./telegram";
+import { buildCalibrationBlock, addApproved, addRejected } from "./roast-calibration";
+import { validateRoast } from "./roast-validator";
 
 dotenv.config();
 
@@ -85,14 +87,14 @@ Hard rules:
 - Must address THIS SPECIFIC claim, not generic misogyny.
 - Respond with ONLY the line. No quotes, no preamble.
 
-Target calibration (match the DNA, never reuse the wording):
-- "Beautiful people shall inherit the world..." → "The man who built his entire philosophy around not being invited to prom."
-- "Women are property and therefore loot" → "A Viking fantasy from a man who has never, once in his life, been anyone's prize."
-- "She's on her cycle, ignore her" → "A clinical diagnosis offered by the demographic most represented on anger-management waitlists."
-- "wives should obey husbands" → "A coverture fantasy from a man who's spent his entire adult life being ignored by his own dog."
-- "Women have ruined the country..." → "Men ran the country alone into slavery, two world wars, and a Great Depression. She arrived five minutes ago and it's her fault."
-- "you are still not safe, I can still exert power..." → "A power fantasy from a man whose last genuine victory was over a self-checkout machine."
-- "All I said was women are inferior and now they won't date me" → "The entire mystery solved in one sentence, by the detective and the crime."`;
+{{CALIBRATION_BLOCK}}`;
+
+// The calibration block is injected dynamically at runtime from
+// data/approved-roasts.json via roast-calibration.ts.
+function buildRoastPrompt(): string {
+  const calibration = buildCalibrationBlock(12);
+  return ROAST_PROMPT.replace("{{CALIBRATION_BLOCK}}", calibration);
+}
 
 const PICKER_PROMPT = (n: number) => `You are judging roasts for an anti-misogyny art project. They get inscribed on the blockchain permanently.
 
@@ -199,27 +201,44 @@ async function callClaude(
 // -------------------------------------------------------
 
 async function generateRoasts(quote: string): Promise<string[]> {
-  log(`  generating 3 roast candidates (Sonnet)`);
+  log(`  generating 5 roast candidates (Sonnet)`);
+  const prompt = buildRoastPrompt();
   const userMsg = `Misogynistic quote: "${quote}"`;
 
-  // Gate for ALL THREE parallel calls upfront — avoids the race where 3
-  // `Promise.allSettled` children each pass their individual gate() but
-  // collectively overshoot the daily cap.
-  const estIn = Math.ceil((ROAST_PROMPT.length + userMsg.length) / 4);
-  spendCap.gate("claude-sonnet-4-6", estIn * 3, 80 * 3);
+  // Gate for ALL FIVE parallel calls upfront
+  const estIn = Math.ceil((prompt.length + userMsg.length) / 4);
+  spendCap.gate("claude-sonnet-4-6", estIn * 5, 120 * 5);
 
   const settled = await Promise.allSettled([
-    callClaude(ROAST_PROMPT, userMsg, "claude-sonnet-4-6", 80),
-    callClaude(ROAST_PROMPT, userMsg, "claude-sonnet-4-6", 80),
-    callClaude(ROAST_PROMPT, userMsg, "claude-sonnet-4-6", 80),
+    callClaude(prompt, userMsg, "claude-sonnet-4-6", 120),
+    callClaude(prompt, userMsg, "claude-sonnet-4-6", 120),
+    callClaude(prompt, userMsg, "claude-sonnet-4-6", 120),
+    callClaude(prompt, userMsg, "claude-sonnet-4-6", 120),
+    callClaude(prompt, userMsg, "claude-sonnet-4-6", 120),
   ]);
-  const candidates: string[] = [];
+  const raw: string[] = [];
   for (const s of settled) {
     if (s.status === "fulfilled" && s.value.length > 0 && s.value.length <= 200) {
-      candidates.push(s.value);
+      raw.push(s.value);
     }
   }
-  return candidates;
+
+  // Validate each candidate (parallel Haiku calls)
+  log(`  validating ${raw.length} candidates`);
+  const validations = await Promise.all(
+    raw.map(c => validateRoast(quote, c).catch(() => ({ pass: false, fails: ["_error"], note: "validator error" })))
+  );
+  const passed: string[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const v = validations[i];
+    if (v.pass) {
+      passed.push(raw[i]);
+      log(`    candidate ${i + 1}: PASS — "${raw[i].slice(0, 60)}…"`);
+    } else {
+      log(`    candidate ${i + 1}: FAIL [${v.fails.join(", ")}] — "${raw[i].slice(0, 50)}…"`);
+    }
+  }
+  return passed;
 }
 
 async function pickBestRoastIndex(originalQuote: string, roasts: string[]): Promise<number> {
@@ -336,6 +355,9 @@ async function pollCallbacks(): Promise<void> {
         );
         await tg.answerCallbackQuery(u.callbackQueryId, "Approved");
         log(`  #${itemId} approved with roast ${pickN}: "${item.roast?.slice(0, 60)}..."`);
+        // Feed into self-improving calibration library
+        addApproved(item.quote, item.roast!, "auto");
+        log(`  #${itemId} added to approved-roasts calibration library`);
       }
     } else if (kind === "regen") {
       if ((item.regenCount || 0) >= REGEN_CAP) {
@@ -375,6 +397,9 @@ async function pollCallbacks(): Promise<void> {
       await tg.editMessageText(u.messageId, `❌ Rejected: "${item.quote.slice(0, 100)}"`);
       await tg.answerCallbackQuery(u.callbackQueryId, "Rejected");
       log(`  #${itemId} rejected`);
+      // Feed rejection into calibration library (teaches the model what to avoid)
+      if (item.roast) addRejected(item.quote, item.roast);
+
     }
   }
 }

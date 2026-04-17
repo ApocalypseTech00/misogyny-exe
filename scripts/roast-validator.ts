@@ -61,8 +61,14 @@ These FAIL:
 - "This isn't misogyny I'll craft a witty comeback for — it's a rape threat..." → no_refusal (is a refusal)
 - "Said the man typing that on a machine built on Ada Lovelace's algorithm." → earns_its_mean is thin; stays_on_scope depends on scrape. Marginal.
 
+7. no_assumed_biography
+   Does NOT assume any biographical detail about the speaker: age, job, relationship status, appearance, hobbies, living situation, education level. "Spent forty years" = FAIL. "Can't finish a jigsaw puzzle" = FAIL. "Still lives in his mother's basement" = FAIL. You know NOTHING about this person except the sentence they typed. Attack the sentence, not the imagined person.
+
+8. universal_reference
+   Any historical, legal, statistical, or cultural reference must be widely understood WITHOUT specialist knowledge. "Prom" = universal. "Coverture" = borderline-OK (the word itself sounds absurd). "HR settled that in 1986" = FAIL (requires knowing employment law history). "EEOC filings" = FAIL. The test: would a 22-year-old with no law degree get this instantly?
+
 Criterion names (use these EXACTLY in fails array):
-targets_typer, no_loneliness_mock, no_sermon, no_refusal, earns_its_mean, stays_on_scope
+targets_typer, no_loneliness_mock, no_sermon, no_refusal, earns_its_mean, stays_on_scope, no_assumed_biography, universal_reference
 
 Respond with ONLY the JSON object. No preamble, no markdown fences.`;
 

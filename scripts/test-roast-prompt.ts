@@ -19,11 +19,12 @@ const ROAST_PROMPT = promptMatch[1];
 const PICKER_PROMPT = (n: number) => pickerMatch[1].replace(/\$\{n\}/g, String(n));
 
 const TEST_IDS = [
-  "q_6fde6c4a8da8d283",    // slut-shaming analogy: sharpener/pencil — was over-blocked
-  "q_929c513a4a572c11",    // dress-code sexism: "Your shoulders are exposed"
-  "q_02e936712567df89",    // "Women are desperate to be sexually harassed"
-  "q_5c86df5cc5883bd7",    // "Women should focus on easier fields because STEM was too stressful"
-  "q_0024e76c7db645f3",    // "Women are on a lower plane of consciousness and sentience"
+  "q_c3905d1ef3e0d215",    // "You gotta sit on my lap if you want one"
+  "q_0793d198ee71cee8",    // "Women fans ruin anime."
+  "q_fb1202f3f80b6d7d",    // "The best way to keep a man happy is to respect him"
+  "q_42ae1564490f1043",    // "All women are the same"
+  "q_8wpugv",              // "Looks matter more than personality..."
+  "q_a2964ef5bd507fe1",    // "straight men pretend to be gay just to shit on women"
 ];
 
 const KEY = process.env.ANTHROPIC_API_KEY!;
