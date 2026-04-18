@@ -557,10 +557,45 @@ SR is already onboard (hackathon win, prior calls) — no pitch/demo needed, jus
 - Gemma/local-model fine-tuning explored as post-launch path — Pi 4B can run 3B quantized via llama.cpp, fine-tune on cloud GPU with synthetic dataset from approved roasts
 - Pi physically plugged in — Tailscale accessible, infra setup can proceed remotely
 
+---
+
+# Session 15 — Pi Infra Live (2026-04-18)
+
+## What Was Done
+
+### Pi Infrastructure
+- **Pi back online** — WiFi had dropped after 5 days of uptime (Pi 4 WiFi power management issue). Power cycle restored it.
+- **WiFi power save disabled permanently** — `sudo iw wlan0 set power_save off` + added `wireless-power off` to `/etc/network/interfaces`.
+- **`.env` deployed** to Pi — 35 production keys configured. DEPLOYER_A key NOT included (by design). Bot wallet `0xaFc1E7Ae9C103565fAAFf4632414AE509625825a` set as PRIVATE_KEY.
+- **Code synced** — pushed `feat/redemption-mechanic` (6 commits) to ApocalypseTech00 GitHub, pulled on Pi. All Session 13/14 work (templates, roast engine, validator, calibration) now on Pi.
+- **`npm ci` completed** — 740 packages installed, Node 20.20.2.
+- **Cron installed** — 4 jobs active: agent (12h), mint (12h +5min), indexer (5min), redemption (5min staggered). All flock'd, scoped pkill, running as user `pi`.
+- **First live agent run successful** — scraped 67 new quotes from 16 subreddits + 10 search queries. Guard correctly blocked 2 (1 child safety, 1 suspected prompt injection). 0 promoted (below min_score threshold). Residential IP scraping confirmed working.
+
+### Not Done (deferred)
+- Telegram bot not created yet — agent runs but can't send approval requests
+- Sepolia E2E shakedown (scrape → TG approve → mint) — blocked by TG
+- Healthchecks.io — ditched per operator decision
+
+## Stats
+- 1 commit pushed to remote (`9d45c07`)
+- Pi agent cycle: 67 quotes scraped, 2 blocked, 0 promoted, ~5 min runtime
+- 42 npm vulnerabilities (all in dev dependencies — hardhat transitive deps)
+
+## Known Issues
+- **Telegram not configured** — agent scrapes + logs but can't send approval requests. Operator needs to create bot via @BotFather, add token + chat ID to Pi `.env`.
+- **More roast dry runs needed** — quality not yet airtight (~60-70% banger rate). Operator explicitly requested more testing before trusting autonomous pipeline.
+- Scraper guard doesn't catch non-misogynist content or sarcastic-women-quoting-misogynists
+- 2 minor JSON parse errors during scraping (non-fatal, skipped batches)
+- `generate-roasts-batch.ts` not yet updated with validator integration
+- Redemption animations not started
+- One-animation-per-quote gallery render not done
+
 ## What's Next
-1. **More dry runs** — keep testing scrape+roast pairs until quality is consistently banger-tier. Not airtight yet.
-2. **Pi infra setup** (remote via SSH): Telegram bot, Healthchecks, Pinata, Bluesky, .env, E2E shakedown
-3. **One-animation-per-quote render** (26 confirmed quotes + roasts)
-4. **Redemption kinetic typography templates**
-5. **Front-end + mainnet deploy + launch**
-6. **Post-launch:** Gemma fine-tuning exploration for autonomous quality improvement
+1. **Telegram bot setup** — create via @BotFather (ApocalypseTech burner), add TELEGRAM_BOT_TOKEN + TELEGRAM_OPERATOR_CHAT_ID to Pi `.env`. Can be done remotely via Tailscale browser SSH.
+2. **More roast dry runs** — keep testing until quality is consistently banger-tier
+3. **Sepolia E2E shakedown** — scrape → TG approve → mint → verify on Etherscan Sepolia
+4. **One-animation-per-quote render** (26 confirmed quotes + roasts)
+5. **Redemption kinetic typography templates**
+6. **Front-end + mainnet deploy + launch**
+7. **Post-launch:** Gemma fine-tuning on Pi for autonomous quality improvement

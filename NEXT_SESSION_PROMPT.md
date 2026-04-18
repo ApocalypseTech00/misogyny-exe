@@ -1,91 +1,69 @@
-# Next Session Prompt — Session 15
+# Next Session Prompt — Session 16
 
-> **Mode:** crunch to ship. Pi is physically online — infra setup can proceed remotely.
 > **Start here:** read this file fully, then last entry in `SESSION-LOG.md`.
+> **Pi is LIVE** — cron running, agent scraping every 12h, accessible via Tailscale browser SSH at `https://login.tailscale.com` (ApocalypseTech00 account, device `judie-2`).
 
 ---
 
-## Session 14 TL;DR
+## Session 15 TL;DR
 
-- **Roast agent pipeline fully wired:** 5-candidate generation → Haiku validator (8 criteria) → Haiku picker → TG approval → self-improving calibration library. All in `scripts/rare-agent-v6.ts`.
-- **Self-improving calibration:** `scripts/roast-calibration.ts` + `data/approved-roasts.json`. TG approvals accumulate as few-shot examples; ROAST_PROMPT dynamically loads best 12. Seeded with 12 confirmed bangers.
-- **Validator tuned through 4 dry runs:** `no_assumed_biography` + `universal_reference` added. `earns_its_mean` + `stays_on_scope` loosened (was over-blocking clean metaphors). `no_loneliness_mock` loosened (fear of female agency = PASS).
-- **ROAST_PROMPT has 11 DNA principles** from Gervais × Regina George research. Key: "let audience complete the logic", "economy is power", "never assume biography", "walk away."
-- **Hit rate ~60-70%** with 5 candidates. NOT airtight yet — more dry runs needed before shipping autonomously.
-- **Education stat footnote** added: NCES Table 318.10, U.S. data, women outperforming since 1982.
+- **Pi infrastructure live.** WiFi reconnected (power save permanently off), `.env` deployed (35 keys, no deployer), code synced to `feat/redemption-mechanic`, cron installed (4 jobs: agent/mint/indexer/redemption). First live scrape: 67 quotes, guard caught 2 bad ones, 0 promoted. Residential IP confirmed working.
+- **Telegram NOT configured yet** — agent scrapes + logs but can't send approval requests. This is the #1 blocker.
+- **Roast quality not yet airtight** — operator wants more dry runs before trusting autonomous pipeline.
 
-## CRITICAL: More testing needed
+## Immediate priorities
 
-The roast agent is NOT ready to ship autonomously. ~30% of outputs are mid-tier or fail validator. The operator explicitly asked for more dry runs before trusting it:
+### 1. Telegram bot (BLOCKING — no mints possible without this)
+Operator needs to:
+1. Create a Telegram bot via `@BotFather` on a burner Telegram account (ApocalypseTech identity)
+2. Start a chat with the bot, send `/start`
+3. Get chat ID: `curl "https://api.telegram.org/bot<TOKEN>/getUpdates"` → copy `message.chat.id`
+4. On Pi (via Tailscale browser SSH): edit `~/misogyny-exe/.env`, set `TELEGRAM_BOT_TOKEN=` and `TELEGRAM_OPERATOR_CHAT_ID=`
+5. Test: `cd ~/misogyny-exe && npx ts-node scripts/rare-agent-v6.ts --once`
 
-> "we need to do a few more tests and dry runs to make the quotes and redemptions air tight"
+### 2. More roast dry runs (operator request)
+Run `npx ts-node scripts/test-roast-prompt.ts` locally (Mac). Edit `TEST_IDS` in the script to pick fresh scrapes from `data/scraper-candidates.json`. Operator wants to keep iterating until quality is consistently banger-tier. Current hit rate ~60-70%.
 
-Run `npx ts-node scripts/test-roast-prompt.ts` with fresh scrapes, evaluate with operator, iterate on prompt/validator until hit rate is consistently banger-tier. The 26 confirmed mint-corpus roasts are LOCKED and banger-tier — this is about the autonomous pipeline for NEW scrapes.
+Key constraints (from operator feedback across Sessions 13-15):
+- Target THIS SPECIFIC GUY, not "all men"
+- Never assume biography (age, job, appearance)
+- References must be universally understood
+- Incels (ideology) = fair game; loneliness = off limits
+- Vary sentence structure (no 3/3 starting with "A [noun]...")
+- Tone: Ricky Gervais × Regina George × turbo-intellect
+
+### 3. Sepolia E2E shakedown (after TG works)
+On Pi: `npx ts-node scripts/rare-agent-v6.ts --once` → should scrape, promote, generate roasts, send TG approval → operator approves → mint fires on next cycle.
+
+### 4. One-animation-per-quote render
+26 confirmed quotes in `data/mint-corpus.json` → 26 cells, each with deterministic animation. Stacked hate (pink on dark) + roast (dark on pink) rows per style. All 31 styles covered (reuse 5 quotes). Run: `npx ts-node scripts/render-samples.ts`
+
+### 5. Redemption kinetic typography
+Build 8-10 templates per `~/Projects/animation-library/KINETIC-TYPOGRAPHY.md`. Wire `generate-redeemed-animation.ts`.
+
+### 6. Front-end + mainnet deploy + launch
 
 ## Current state
 
-- **Branch:** `feat/redemption-mechanic`
-- **Commits:** `10f3e6a` (calibration + validator), `ec079c6` (templates + prompt), `4f498a2` (session docs)
-- **Pi:** `judie-2` online via Tailscale `100.70.212.104`. Physically plugged in. `.env` NOT YET created. All setup is remote via SSH.
+- **Branch:** `feat/redemption-mechanic` at `9d45c07`
+- **Pi:** `judie-2` on Tailscale, cron active, `.env` configured (minus TG). WiFi power save off. Agent ran successfully.
+- **Mac:** local `.env` has all keys. Dev only.
 - **Sepolia contracts:** deployed + verified.
-- **Tests:** 233/233 passing as of Session 11. Not re-run recently.
-
-## Mint corpus: 26 quotes LOCKED
-
-`data/mint-corpus.json` — 9 punchy / 9 medium / 8 long. All roasts operator-approved in `data/roasts.json`. **Do NOT regenerate these.** Entries with `override: true` are operator-handwritten or manually approved.
-
-## Confirmed bangers (tone calibrators)
-
-| Scrape | Roast |
-|---|---|
-| Beautiful people shall inherit... | The man who built his entire philosophy around not being invited to prom. |
-| Women are property and therefore loot | A Viking fantasy from a man who has never, once in his life, been anyone's prize. |
-| She's on her cycle, ignore her | A clinical diagnosis offered by the demographic most represented on anger-management waitlists. |
-| wives should obey husbands | A coverture fantasy from a man who's spent his entire adult life being ignored by his own dog. |
-| Women have ruined the country... | Men ran the country alone into slavery, two world wars, and a Great Depression. She arrived five minutes ago and it's her fault. |
-| you are still not safe, I can still exert power... | A power fantasy from a man whose last genuine victory was over a self-checkout machine. |
-| All I said was women are inferior and now they won't date me | The entire mystery solved in one sentence, by the detective and the crime. |
-| Women should not be allowed to vote | The last time men decided everything alone, they started two world wars. They appear to be working on the third. |
-| Women are desperate to be sexually harassed | Projected the fantasy so hard he filed it under "research." |
-
-## Remaining work (priority order)
-
-### 1. More roast dry runs (BLOCKING)
-Test the autonomous pipeline with fresh scrapes. Iterate prompt/validator until operator is satisfied. Use `scripts/test-roast-prompt.ts` — edit `TEST_IDS` to pick new scrapes from `data/scraper-candidates.json`.
-
-### 2. Pi infra setup (remote via SSH)
-- Burner Telegram bot → `TELEGRAM_BOT_TOKEN` + `TELEGRAM_OPERATOR_CHAT_ID`
-- Healthchecks.io → `HEALTHCHECK_URL`
-- Pinata → `PINATA_JWT`
-- Bluesky → `BLUESKY_HANDLE` + `BLUESKY_APP_PASSWORD`
-- `scp .env pi@judie-2:~/misogyny-exe/.env`
-- On Pi: `git pull && npm ci && bash deploy/firstrun.sh`
-- Sepolia E2E: `npm run v6:agent:dry` → scrape → TG approval → mint → verify
-
-### 3. One-animation-per-quote render
-26 confirmed quotes → 26 cells, each with deterministic animation. Stacked hate + roast redeemed-palette rows. Gallery for final operator tweaks.
-
-### 4. Redemption kinetic typography templates
-Build 8-10 templates per `~/Projects/animation-library/KINETIC-TYPOGRAPHY.md`. Wire `generate-redeemed-animation.ts`.
-
-### 5. Front-end + mainnet deploy + launch
-V6 site update, render gate, first mainnet mint, Bluesky launch post, deploy to all 3 domains.
-
-### 6. Post-launch: Gemma fine-tuning
-Pi 4B can run Gemma 3B quantized via llama.cpp. Fine-tune on cloud GPU with synthetic dataset from approved roasts. Hybrid: Gemma drafts (free, on-device) → Sonnet validates (1 cheap API call). Post-launch exploration.
+- **Mint corpus:** 26 quotes LOCKED in `data/mint-corpus.json`. All roasts operator-approved. **Do NOT regenerate.**
+- **Tests:** 233/233 passing as of Session 11.
 
 ## Key files
 
 | File | Purpose |
 |---|---|
-| `scripts/rare-agent-v6.ts` | Live agent — ROAST_PROMPT (11 principles) + 5-candidate gen + validator + TG approval + calibration feedback |
-| `scripts/roast-calibration.ts` | Self-improving few-shot library — addApproved/addRejected/buildCalibrationBlock |
-| `scripts/roast-validator.ts` | Haiku quality gate — 8 criteria (targets_typer, no_loneliness_mock, no_sermon, no_refusal, earns_its_mean, stays_on_scope, no_assumed_biography, universal_reference) |
-| `scripts/generate-roasts-batch.ts` | Batch roast gen (validator NOT yet integrated — only rare-agent-v6 has it) |
-| `scripts/test-roast-prompt.ts` | Dry-test harness — edit TEST_IDS, run, evaluate |
+| `scripts/rare-agent-v6.ts` | Live agent — 11 DNA principles, 5-candidate gen, validator, TG approval, calibration feedback |
+| `scripts/roast-calibration.ts` | Self-improving few-shot library (12 seed bangers, grows on TG approve) |
+| `scripts/roast-validator.ts` | Haiku quality gate — 8 criteria |
+| `scripts/test-roast-prompt.ts` | Dry-test harness |
 | `data/mint-corpus.json` | 26 LOCKED quotes |
 | `data/roasts.json` | All roasts (15 manual overrides + auto) |
-| `data/approved-roasts.json` | Self-improving calibration library (12 seed bangers) |
+| `data/approved-roasts.json` | Calibration library |
+| `deploy/cron.d-misogyny` | Cron config (installed to `/etc/cron.d/misogyny` on Pi) |
 
 ## Hard rules (all 13)
 
@@ -103,24 +81,18 @@ Pi 4B can run Gemma 3B quantized via llama.cpp. Fine-tune on cloud GPU with synt
 12. Roast tone: target THIS specific guy, not "all men." Incels (ideology) = fair game. Loneliness/physical traits = off limits. Never assume biography. Confirmed roasts are LOCKED.
 13. Vary sentence openings. No 3/3 starting with "A [noun]..."
 
-## Commands
+## Pi access
 
 ```bash
-cd ~/Projects/misogyny-exe
+# Browser SSH (works from anywhere):
+# https://login.tailscale.com → judie-2 → SSH
 
-# Dry-test roast pipeline (edit TEST_IDS first)
-npx ts-node scripts/test-roast-prompt.ts
+# Or from Mac terminal:
+ssh pi@100.70.212.104
 
-# Batch roasts (writes to data/roasts.json)
-npx ts-node scripts/generate-roasts-batch.ts
+# Check agent logs:
+tail -50 ~/misogyny-exe/logs/rare-agent-v6.log
 
-# Render gallery
-npx ts-node scripts/render-samples.ts
-open data/samples/index.html
-
-# Tests
-npx hardhat test
-
-# Pi access
-ssh pi@judie-2
+# Manual agent run:
+cd ~/misogyny-exe && npx ts-node scripts/rare-agent-v6.ts --once
 ```
