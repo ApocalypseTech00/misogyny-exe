@@ -41,10 +41,10 @@ Criteria (ANY failure = overall fail):
    NOT the model's self-aware refusal text (e.g. "I won't write this", "This isn't misogyny to rebut", "No format makes this worth preserving").
 
 5. earns_its_mean
-   Reveals something TRUE: a stat, historical fact, character pattern, consequence, or specific absurd detail. FAIL if it's pure snark with no substance.
+   Reveals something TRUE or lands a sharp observation: a stat, historical fact, character pattern, consequence, metaphor that reframes, or specific absurd detail. Pure snark with NO substance = FAIL. But a clean metaphor that reveals hypocrisy or self-contradiction = PASS. A cold reframing of his own logic against him = PASS. If the line makes you think "...oh, he played himself" — it earns its mean. Be GENEROUS here. Only fail lines that are genuinely empty insults with no insight.
 
 6. stays_on_scope
-   Directly addresses THIS specific claim, not generic misogyny. A reader should be able to tell which scrape this responds to.
+   Responds to THIS specific claim. A reader should get which scrape this is about. But the response can be lateral — a metaphor, a historical parallel, a reframing — as long as the connection is clear. Don't require literal keyword overlap. If the scrape is about "women can't do logic" and the roast references "the compiler she wrote," that's on-scope even without the word "logic."
 
 Calibration references — these PASS:
 - "The man who built his entire philosophy around not being invited to prom." (targets specific typer; historical/character; specific)

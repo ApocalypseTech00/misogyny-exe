@@ -508,3 +508,59 @@ SR is already onboard (hackathon win, prior calls) — no pitch/demo needed, jus
 4. Friday: Pi infra setup (Telegram, Healthchecks, Pinata, Bluesky, .env, E2E shakedown)
 5. Friday/Saturday: redemption kinetic typography templates
 6. Saturday: front-end + mainnet deploy + launch
+
+---
+
+# Session 14 — Roast Agent Autonomy + Validator Tuning (2026-04-17 to 2026-04-18)
+
+## What Was Done
+
+### Roast Agent Pipeline Upgrades
+- **Self-improving calibration system** (`scripts/roast-calibration.ts`): `data/approved-roasts.json` grows as operator approves/rejects via TG. ROAST_PROMPT dynamically loads best 12 approved roasts as few-shot calibration examples. Seeded with 12 Session 13 bangers.
+- **5-candidate generation** (was 3): higher banger hit rate. Cost increase negligible (~$0.02/quote).
+- **Validator wired into live agent** (`rare-agent-v6.ts`): candidates pass through Haiku quality gate before picker runs. TG approve → `addApproved()`; TG reject → `addRejected()`.
+- **Validator upgraded** with 2 new criteria: `no_assumed_biography` (no fabricated age/job/hobbies/appearance) and `universal_reference` (references must be widely understood without specialist knowledge).
+- **`earns_its_mean` + `stays_on_scope` loosened** — Haiku was over-blocking clean metaphors and lateral references. Now generous with metaphors that reveal hypocrisy.
+- **`no_loneliness_mock` loosened** — fear of female agency/options = PASS; being alone = still FAIL. "If in doubt, PASS."
+- **Sentence structure diversity** — principle #11 added to ROAST_PROMPT: vary openings, don't start 3/3 with "A [noun]..."
+- **ROAST_PROMPT research-informed rewrite**: 11 DNA principles distilled from Gervais × Regina George structural analysis. Key additions: "let the audience complete the logic", "economy is power", "never assume biography", "write for the audience not the target", "walk away".
+
+### Roast Content
+- Operator confirmed roast for `q_02e936712567df89` "Women are desperate to be sexually harassed" → "Projected the fantasy so hard he filed it under 'research.'"
+- Updated `q_gfxs1t` education roast to reference 1982 NCES data: "Women have been outperforming men at every degree level since 1982. The boys needing 'help' from lab partners didn't finish."
+- Added `footnote` field to roasts.json for on-chain NFT description citation (NCES source + U.S. country reference).
+
+### Dry Run Testing
+- 4 rounds of dry-run tests across ~24 unique scrapes
+- Validator correctly blocks: loneliness-mocking, assumed biography, niche references, refusal-text, broad-demographic attacks
+- Validator correctly passes: fear-of-female-agency attacks, cold metaphors, historical facts, specific character assassination
+- Hit rate improved from ~30% to ~60-70% with 5 candidates + loosened validator
+- Some scrapes remain genuinely hard (slut-shaming analogies, MRA self-pity claims)
+- DSM-5 reference flagged as too niche — validator now catches via `universal_reference`
+
+### Rules Codified
+- Incels (as worldview/ideology of sexual entitlement) = fair game to mock. Loneliness as a condition = still off limits.
+- Updated memory: `feedback_misogyny_exe_roast_tone.md` with full calibration + restraint rules.
+- Education stats verified: NCES Table 318.10 (bachelor's since 1982, master's since 1987, doctorates since 2006, 59% as of 2021-22).
+
+## Stats
+- 3 commits: `ec079c6`, `10f3e6a`, `4f498a2`
+- ~4 rounds of dry-run testing, ~$3 API spend
+- Validator: 8 criteria, tested on ~24 scrapes
+
+## Known Issues
+- **More dry runs needed** — quotes and redemptions not yet airtight. Agent produces ~60-70% banger rate; remaining 30% is mid-tier or fails validator. Need continued testing + operator curation to lock in quality.
+- Scraper guard still doesn't catch non-misogynist content ("The best way to keep a man happy is to respect him") or woman-quoting-misogynists-sarcastically
+- `generate-roasts-batch.ts` not yet updated with validator integration (only `rare-agent-v6.ts` has it)
+- Redemption animations still not started
+- One-animation-per-quote gallery render not done
+- Gemma/local-model fine-tuning explored as post-launch path — Pi 4B can run 3B quantized via llama.cpp, fine-tune on cloud GPU with synthetic dataset from approved roasts
+- Pi physically plugged in — Tailscale accessible, infra setup can proceed remotely
+
+## What's Next
+1. **More dry runs** — keep testing scrape+roast pairs until quality is consistently banger-tier. Not airtight yet.
+2. **Pi infra setup** (remote via SSH): Telegram bot, Healthchecks, Pinata, Bluesky, .env, E2E shakedown
+3. **One-animation-per-quote render** (26 confirmed quotes + roasts)
+4. **Redemption kinetic typography templates**
+5. **Front-end + mainnet deploy + launch**
+6. **Post-launch:** Gemma fine-tuning exploration for autonomous quality improvement
